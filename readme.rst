@@ -71,40 +71,42 @@ The CodeIgniter team would like to thank EllisLab, all the
 contributors to the CodeIgniter project and you, the CodeIgniter user.
 
 
+## Information My Project
 
 
 Aplikasi Klinik
+Aplikasi Klinik adalah sebuah aplikasi berbasis web yang dibangun menggunakan framework CodeIgniter 3 untuk mengelola operasional klinik, seperti manajemen pasien, jadwal dokter, dan data terkait lainnya. Repository ini berisi source code untuk aplikasi tersebut.
 Deskripsi
-Repositori ini berisi kode sumber untuk Aplikasi Klinik, sebuah aplikasi berbasis web yang dikembangkan menggunakan framework CodeIgniter 3. Aplikasi ini dirancang untuk mengelola operasional klinik, seperti manajemen pasien, jadwal dokter, rekam medis, dan fitur terkait lainnya. Repositori ini digunakan untuk menyimpan dan mencadangkan kode yang dibuat untuk proyek ini.
-Fitur
-
-Manajemen data pasien
-Penjadwalan kunjungan
-Pengelolaan rekam medis
-Administrasi klinik (pengguna, laporan, dll.)
-Antarmuka pengguna yang sederhana dan responsif
-
+Aplikasi ini dirancang untuk membantu administrasi klinik dalam mengelola data pasien, dokter, dan jadwal pelayanan. Project ini dibuat tanpa menggunakan Composer untuk dependency management, sehingga semua library dan konfigurasi dilakukan secara manual sesuai dengan struktur CodeIgniter 3.
+Catatan: Fitur laporan belum diimplementasikan dalam aplikasi ini.
 Prasyarat
 Untuk menjalankan aplikasi ini, pastikan Anda memiliki:
 
 PHP versi 5.6 atau lebih tinggi
-MySQL atau database lain yang kompatibel dengan CodeIgniter 3
-Web server (contoh: Apache, Nginx)
-Composer (opsional, jika ada dependensi tambahan)
-Browser modern (Chrome, Firefox, dll.)
+MySQL atau MariaDB sebagai database
+Web server (contoh: Apache) dengan modul mod_rewrite diaktifkan untuk URL rewriting
+CodeIgniter 3 (dapat diunduh dari situs resmi CodeIgniter)
 
 Instalasi
 
-Kloning Repositori:git clone https://github.com/[username]/aplikasi_klinik.git
+Unduh CodeIgniter 3:
+
+Kunjungi situs resmi CodeIgniter 3 untuk mengunduh versi framework yang sesuai.
+Ekstrak file ke direktori web server Anda (misalnya, htdocs pada XAMPP).
 
 
-Masuk ke Direktori Proyek:cd aplikasi_klinik
+Clone atau Salin Repository:
+
+Clone repository ini atau salin isi folder ke dalam direktori CodeIgniter yang sudah diekstrak.
+
+git clone <URL_REPOSITORY_ANDA>
 
 
 Konfigurasi Database:
-Buat database di MySQL.
-Impor skema database dari file database.sql (jika tersedia) atau buat tabel sesuai kebutuhan.
-Sesuaikan pengaturan database di file application/config/database.php:'hostname' => 'localhost',
+
+Buat database baru di MySQL/MariaDB.
+Impor skema database dari file database.sql (jika ada) ke database Anda.
+Buka file application/config/database.php dan sesuaikan pengaturan database:'hostname' => 'localhost',
 'username' => 'your_username',
 'password' => 'your_password',
 'database' => 'nama_database',
@@ -113,52 +115,56 @@ Sesuaikan pengaturan database di file application/config/database.php:'hostname'
 
 
 Konfigurasi Base URL:
+
 Buka file application/config/config.php dan atur base_url sesuai dengan lokasi aplikasi Anda:$config['base_url'] = 'http://localhost/aplikasi_klinik/';
 
 
 
 
 Jalankan Aplikasi:
-Pastikan web server dan MySQL berjalan.
-Akses aplikasi melalui browser di URL yang sesuai (contoh: http://localhost/aplikasi_klinik).
+
+Pastikan web server dan MySQL sudah berjalan.
+Akses aplikasi melalui browser dengan URL yang sesuai (misalnya, http://localhost/aplikasi_klinik/).
 
 
 
-Struktur Direktori
+Struktur Folder
+Berikut adalah struktur utama folder dalam repository ini:
+aplikasi_klinik/
+├── application/
+│   ├── config/      # File konfigurasi seperti database.php dan config.php
+│   ├── controllers/ # Controller untuk logika aplikasi
+│   ├── models/      # Model untuk interaksi dengan database
+│   ├── views/       # View untuk tampilan antarmuka
+├── system/          # Core framework CodeIgniter 3
+├── assets/          # File statis seperti CSS, JS, dan gambar
+└── README.md        # File ini
 
-application/: Berisi kode utama CodeIgniter (controller, model, view, config, dll.).
-assets/: Berisi file statis seperti CSS, JavaScript, dan gambar.
-system/: Berisi core framework CodeIgniter 3.
-database.sql (opsional): Skema database untuk aplikasi.
+Cara Penggunaan
 
-Penggunaan
-
-Login: Gunakan kredensial default (jika ada) atau buat akun admin melalui antarmuka aplikasi.
-Fitur Utama:
-Manajemen Pasien: Tambah, edit, atau hapus data pasien.
-Jadwal Dokter: Atur jadwal dokter dan lihat ketersediaan.
-Rekam Medis: Catat riwayat medis pasien.
+Login: Akses halaman login (biasanya di base_url) untuk masuk ke sistem.
+Manajemen Data:
+Pasien: Tambah, edit, atau hapus data pasien.
+Dokter: Kelola data dokter dan jadwal praktik.
+Jadwal: Atur jadwal pelayanan klinik.
 
 
-Untuk detail lebih lanjut, lihat dokumentasi di dalam folder application/views atau komentar pada kode.
-
-Dependensi
-
-CodeIgniter 3: Framework utama.
-Bootstrap (opsional): Untuk antarmuka pengguna (jika digunakan).
-jQuery (opsional): Untuk interaksi JavaScript.
-Pastikan dependensi tambahan (jika ada) diinstal melalui composer.json atau secara manual.
-
-Catatan
-
-Repositori ini digunakan untuk cadangan kode dan pengembangan pribadi.
-Pastikan untuk mengamankan aplikasi (contoh: mengganti kredensial default, mengatur izin folder).
-Jika menemui masalah, periksa log di application/logs atau buat issue di repositori.
+Catatan: Fitur laporan belum tersedia dan akan ditambahkan pada pembaruan berikutnya.
 
 Kontribusi
+Jika Anda ingin berkontribusi pada pengembangan aplikasi ini:
 
-Jika ingin berkontribusi, lakukan fork repositori dan ajukan pull request dengan perubahan yang diusulkan.
-Pastikan kode yang ditambahkan sesuai dengan standar CodeIgniter dan terdokumentasi dengan baik.
+Fork repository ini.
+Buat branch baru untuk fitur atau perbaikan (git checkout -b fitur-baru).
+Commit perubahan Anda (git commit -m 'Menambahkan fitur X').
+Push ke branch Anda (git push origin fitur-baru).
+Buat Pull Request di repository ini.
+
+Catatan Tambahan
+
+Project ini tidak menggunakan Composer, jadi pastikan semua library tambahan sudah disertakan secara manual di folder application/libraries atau application/third_party.
+Untuk keamanan, pastikan Anda mengatur hak akses file dan folder dengan benar di server produksi.
+Dokumentasi resmi CodeIgniter 3 dapat diakses di https://www.codeigniter.com/userguide3/ untuk referensi pengembangan.
 
 Lisensi
-Aplikasi ini dikembangkan untuk keperluan pribadi dan tidak memiliki lisensi resmi. Hubungi pengembang untuk izin penggunaan atau distribusi.
+Aplikasi ini bersifat open-source dan dapat digunakan sesuai dengan lisensi yang ditentukan (misalnya, MIT License). Pastikan untuk memeriksa file LICENSE di repository (jika ada).
