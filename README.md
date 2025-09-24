@@ -71,7 +71,7 @@
 .. contributors to the CodeIgniter project and you, the CodeIgniter user. -->
 
 
- # Information My Project
+# Information My Project
 
 ## Aplikasi Klinik
 Aplikasi Klinik adalah sebuah aplikasi berbasis web yang dibangun menggunakan framework CodeIgniter 3 untuk mengelola operasional klinik, seperti manajemen pasien, jadwal dokter, dan data terkait lainnya. Repository ini berisi source code untuk aplikasi tersebut.
@@ -155,4 +155,4 @@ Jika Anda ingin berkontribusi pada pengembangan aplikasi ini:
 - Dokumentasi resmi CodeIgniter 3 dapat diakses di `https://www.codeigniter.com/userguide3/` untuk referensi pengembangan.
 
 ## Lisensi
-Aplikasi ini bersifat open-source dan dapat digunakan sesuai dengan lisensi yang ditentukan (misalnya, MIT License). Pastikan untuk memeriksa file `LICENSE` di repository (jika ada).
+Aplikasi ini bersifat pribadi dan tidak untuk digunakan secara open-source. Penggunaan, modifikasi, atau distribusi aplikasi ini hanya diizinkan dengan persetujuan eksplisit dari pemilik proyek.
