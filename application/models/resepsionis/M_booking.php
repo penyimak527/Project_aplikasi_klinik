@@ -112,8 +112,6 @@ class M_booking extends CI_Model
     public function edit()
     {
         $inputan = array(
-            'id_pasien' => $this->input->post('id_pasien'),
-            'nama_pasien' => $this->input->post('nama_pasien'),
             'id_poli' => $this->input->post('id_poli'),
             'nama_poli' => $this->input->post('nama_poli'),
             'id_dokter' => $this->input->post('id_dokter'),
