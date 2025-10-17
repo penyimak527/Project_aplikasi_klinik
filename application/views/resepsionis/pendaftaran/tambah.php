@@ -559,7 +559,7 @@
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Nama Poli</label>
                 <div class="col-sm-10">
-                  <select name="id_poli" id="id_poli" class="form-select">
+                  <select name="id_poli" id="id_poli" class="form-select" required>
                     <option value="">Pilih Poli..</option>
                   </select>
                   <input type="hidden" class="form-control" name="nama_poli" id="nama_poli" placeholder="Nama poli"
@@ -569,7 +569,7 @@
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Nama Dokter</label>
                 <div class="col-sm-10">
-                  <select name="id_dokter" id="id_dokter" class="form-select">
+                  <select name="id_dokter" id="id_dokter" class="form-select" required>
                     <option value="">Pilih Dokter..</option>
                   </select>
                   <input type="hidden" class="form-control" name="nama_dokter" id="nama_dokter"

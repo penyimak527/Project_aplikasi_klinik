@@ -58,21 +58,47 @@
     $('#form_tambah').on('submit', function () {
         formatDataBeforeSubmit();
     });
+     // untuk validasi form pada bagian required
+  function validateForm(formSelector) {
+    let isValid = true;
+    $(formSelector + ' [required]').removeClass('is-invalid');
+    $(formSelector + ' [required]').each(function () {
+      if (!$(this).val() || $(this).val().trim() === '') {
+        isValid = false;
+        $(this).addClass('is-invalid');
+      }
+    });
+    if (!isValid) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Harap isi semua kolom yang wajib diisi.',
+        icon: 'error',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'Oke'
+      });
+    }
+    return isValid;
+  }
     // funt tambah data 
-    function tambah() {
-        const keluhan = $('#keluhan').val();
-        const jenis_treatment = $('#jenis_treatment').val();
-        const produk = $('#produk_digunakan').val();
-        const hasil = $('#hasil_perawatan').val();
-        const status = $('#status_foto').val();
-        if (keluhan == '' || jenis_treatment == '' || produk == '' || hasil == '' || status == '') {
-            Swal.fire({
-                icon: "error",
-                title: "Oops...",
-                text: "Inputan Kosong",
-            });
-            return;
-        }
+    function tambah(e) {
+    e.preventDefault();
+    if (!validateForm('#form_tambah')) {
+      return;
+    }
+        // const keluhan = $('#keluhan').val();
+        // const jenis_treatment = $('#jenis_treatment').val();
+        // const produk = $('#produk_digunakan').val();
+        // const hasil = $('#hasil_perawatan').val();
+        // const status = $('#status_foto').val();
+        // const foto = $('#upload_foto').val();
+        // if (keluhan == '' || jenis_treatment == '' || produk == '' || hasil == '' || status == '' || foto == '') {
+        //     Swal.fire({
+        //         icon: "error",
+        //         title: "Oops...",
+        //         text: "Inputan Kosong",
+        //     });
+        //     return;
+        // }
         const formData = new FormData($('#form_tambah')[0]);
         $.ajax({
             url: '<?php echo base_url("poli/kecantikan/tambah_proses") ?>',
@@ -465,7 +491,7 @@
                onchange="hitungSubtotal(${newRowId})">
     </td>
     <td>
-        <input type="text" class="form-control" name="obat[${newRowId}][aturan_pakai_o]" placeholder="Aturan pakai" autocomplete="off">
+        <input type="text" class="form-control" name="obat[${newRowId}][aturan_pakai_o]" placeholder="Aturan pakai" autocomplete="off" required>
     </td>
     <td>
         <input type="text" class="form-control harga" name="obat[${newRowId}][harga_o]" 
@@ -661,7 +687,7 @@
                 <label class="col-sm-3 col-form-label">Aturan Pakai</label>
                 <div class="col-sm-9">
                     <input type="text" name="racikan[${racikanCounter}][aturan_r]" 
-                           class="form-control" placeholder="Aturan Pakai">
+                           class="form-control" placeholder="Aturan Pakai" required>
                 </div>
             </div>
             <div class="mb-2 row">
@@ -943,7 +969,7 @@
                                             <label for="tambah_contoh" class="col-sm-2 col-form-label">Keluhan</label>
                                             <div class="col-sm-10">
                                                 <textarea class="form-control" name="keluhan"
-                                                    id="keluhan"><?php echo $row['keluhan'] ?></textarea>
+                                                    id="keluhan" required placeholder="Berikan keluhan yang dimiliki"></textarea>
                                             </div>
                                         </div>
                                         <div class="mb-3 row">
@@ -951,9 +977,7 @@
                                                 treatment</label>
                                             <div class="col-sm-10">
                                                 <input type="text" class="form-control" name="jenis_treatment"
-                                                    id="jenis_treatment" placeholder="Jenis treatment"
-                                                    value="<?php echo $row['jenis_treatment'] ?>" required
-                                                    autocomplete="off">
+                                                    id="jenis_treatment" placeholder="Jenis treatment" required autocomplete="off">
                                             </div>
                                         </div>
                                     </div>
@@ -963,8 +987,7 @@
                                         <div class="col-sm-10">
                                             <input type="text" class="form-control" name="r_alergi" id="r_alergi"
                                                 placeholder="Riwayat alergi"
-                                                value="<?php echo $row['riwayat_alergi'] ?>" required
-                                                autocomplete="off">
+                                                value="<?php echo $row['riwayat_alergi'] ?>" autocomplete="off">
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
@@ -972,9 +995,7 @@
                                             Digunakan</label>
                                         <div class="col-sm-10">
                                             <input type="text" class="form-control" name="produk_digunakan"
-                                                id="produk_digunakan" placeholder="Produk digunakan"
-                                                value="<?php echo $row['produk_digunakan'] ?>" required
-                                                autocomplete="off">
+                                                id="produk_digunakan" placeholder="Produk digunakan" autocomplete="off">
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
@@ -982,15 +1003,13 @@
                                             Perawatan</label>
                                         <div class="col-sm-10">
                                             <input type="text" class="form-control" name="hasil_perawatan"
-                                                id="hasil_perawatan" placeholder="Hasil perawatan"
-                                                value="<?php echo $row['hasil_perawatan'] ?>" required
-                                                autocomplete="off">
+                                                id="hasil_perawatan" placeholder="Hasil perawatan" required autocomplete="off">
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
                                         <label for="tambah_contoh" class="col-sm-2 col-form-label">Status Foto</label>
                                         <div class="col-sm-10">
-                                            <select name="status_foto" id="status_foto" class="form-select">
+                                            <select name="status_foto" id="status_foto" class="form-select" required>
                                                 <option value="">Pilih Status Foto</option>
                                                 <option value="Sebelum">Sebelum</option>
                                                 <option value="Sesudah">Sesudah</option>
@@ -1001,7 +1020,7 @@
                                         <label for="tambah_contoh" class="col-sm-2 col-form-label">Upload Foto</label>
                                         <div class="col-sm-10">
                                             <input type="file" accept="image/*" class="form-control" name="upload_foto"
-                                                id="upload_foto" placeholder="Upload foto" autocomplete="off">
+                                                id="upload_foto" placeholder="Upload foto" autocomplete="off" required>
                                         </div>
                                     </div>
                                     <!-- detail end -->
