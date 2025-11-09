@@ -39,8 +39,8 @@ class M_transaksi extends CI_Model
         $cari = $this->input->post('cari');
 
         // Pertama, dapatkan list invoice saja
-        $this->db->from('rsp_pembayaran a');
         $this->db->select('a.kode_invoice, a.nama_pasien, a.tanggal, a.nik');
+        $this->db->from('rsp_pembayaran a');
         $this->db->join('pol_resep b', 'a.kode_invoice = b.kode_invoice');
 
         $this->db->group_start();

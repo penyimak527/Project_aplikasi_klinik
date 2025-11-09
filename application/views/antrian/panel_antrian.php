@@ -81,6 +81,7 @@
 				},
 				success: function (res) {
 					let table = "";
+					console.log(res);
 					if (!res.result || res.data == 0) {
 						panggil(null);
 						htmltable([]);

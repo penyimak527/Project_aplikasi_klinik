@@ -47,6 +47,7 @@
       success: function (res) {
         let table = "";
         let table1 = "";
+        console.log(res);
         if (res.result) {
           let i = 1;
           for (const item of res.data) {

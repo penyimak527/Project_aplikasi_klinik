@@ -384,7 +384,7 @@
                 <input type="text" name="harga_tindakan[]"  class="form-control input_htindakan"  value="${item.harga}" readonly>
             </td>
             <td>
-                <button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest('tr').remove()">X</button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest('tr').remove(); hitungTotalTindakan()">X</button>
             </td>
         </tr>
     `;
@@ -404,7 +404,7 @@
                 <input type="text" name="harga_tindakanb[]" class="form-control" onkeyup="FormatCurrency(this);" autocomplete="off" placeholder="Harga" value="${harga_tindakan}" readonly>
             </td>
             <td>
-                <button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest('tr').remove()">X</button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest('tr').remove(); hitungTotalTindakan">X</button>
             </td>
         </tr>
     `;
@@ -576,6 +576,8 @@
         });
         const grandTotal = totalObat + totalRacikan;
         const grandTotall = totalObatl + totalRacikanl;
+        console.log("untuk total obat dan racikan"+grandTotall);
+        console.log("Untuk tindakan"+ totaltindakan);
         const tobatt = totaltindakan + grandTotall;
         $('#harga_tindakan_all').text(formatRupiah(totaltindakan));
         // $('#total_obat').text(formatRupiah(totalObat));
@@ -586,6 +588,11 @@
         $('#tobat').val(tobatt);
     }
     // Fungsi untuk menghapus baris obat
+    function hapus_obat_multiple(rowId) {
+        $(`#row_obat_${rowId}`).remove();
+        hitungTotalObat();
+    }
+
     function hapus_obat_multiple(rowId) {
         $(`#row_obat_${rowId}`).remove();
         hitungTotalObat();
