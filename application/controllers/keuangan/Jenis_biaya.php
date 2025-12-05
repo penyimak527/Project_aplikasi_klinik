@@ -5,6 +5,9 @@ class Jenis_biaya extends CI_Controller
     {
         parent::__construct();
         date_default_timezone_set('Asia/Jakarta');
+          if($this->session->userdata('username') == null) {
+            redirect('login/login');
+        }
         $this->load->model('keuangan/m_jenis_biaya', 'model');
     }
 

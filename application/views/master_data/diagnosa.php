@@ -9,7 +9,7 @@
 
   function get_data() {
     let cari = $('#cari').val();
-    let count_header = $(`#table-data thead tr th`).length
+    let count_header = $(`#table-data thead tr th`).length;
 
     $.ajax({
       url: '<?php echo base_url(); ?>master_data/diagnosa/result_data',
@@ -112,6 +112,17 @@
           method: 'POST',
           data: { id },
           dataType: 'json',
+          beforeSend: function () {
+            Swal.fire({
+              title: 'Mengupload...',
+              html: 'Mohon Ditunggu...',
+              allowEscapeKey: false,
+              allowOutsideClick: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+          },
           success: function (res) {
             if (res.status == true) {
               Swal.fire({
@@ -180,7 +191,8 @@
             <div class="col-sm-3">
               <div class="input-group">
                 <div class="input-group-text"><i class="fas fa-search"></i></div>
-                <input type="text" class="form-control" id="cari" placeholder="Cari Diagnosa/Nama Poli" autocomplete="off">
+                <input type="text" class="form-control" id="cari" placeholder="Cari Diagnosa/Nama Poli"
+                  autocomplete="off">
               </div>
             </div>
           </div>

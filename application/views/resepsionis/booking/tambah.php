@@ -28,7 +28,27 @@
       pasien();
     })
   })
-
+ // untuk validasi form pada bagian required
+  function validateForm(formSelector) {
+    let isValid = true;
+    $(formSelector + ' [required]').removeClass('is-invalid');
+    $(formSelector + ' [required]').each(function () {
+      if (!$(this).val() || $(this).val().trim() === '') {
+        isValid = false;
+        $(this).addClass('is-invalid');
+      }
+    });
+    if (!isValid) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Harap isi semua kolom yang wajib diisi.',
+        icon: 'error',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'Oke'
+      });
+    }
+    return isValid;
+  }
 
   function waktuu() {
     var timeInput = document.getElementById('waktu');
@@ -58,30 +78,32 @@
       dokter(idPoli); // Panggil dengan parameter idPoli
     }
   });
-  function tambah() {
-    const id_pasien = $('#id_pasien').val();
-    const nama_pasien = $('#nama_pasien').val();
-    const id_dokter = $('#id_dokter').val();
-    const nama_dokter = $('#nama_dokter').val();
-    const waktu = $('#waktu').val();
-    const tanggal = $('#tanggal').val();
-
-    if (id_dokter == '' || nama_pasien == '' || id_dokter == '' || nama_dokter == '' || waktu == '' || tanggal == '') {
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "Inputan Kosong",
-      });
+  function tambah(e) {
+     let btn = $(e.target).closest('button');
+    e.preventDefault();
+    btn.prop("disabled", true).text("Mengirim...");
+   if (!validateForm('#form_tambah')) {
+      btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
       return;
-    }
+    };
     $.ajax({
       url: '<?php echo base_url('resepsionis/booking/tambah') ?>',
       method: 'POST',
       data: $('#form_tambah').serialize(),
       dataType: 'json',
+       beforeSend: function () {
+        Swal.fire({
+            title: 'Mengupload...',
+            html: 'Mohon Ditunggu...',
+            allowEscapeKey: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    },
       success: function (res, status) {
         console.log(res, status);
-
         if (res.status == true) {
           Swal.fire({
             title: 'Berhasil!',
@@ -110,8 +132,9 @@
             closeOnConfirm: false,
             allowOutsideClick: false
           }).then((result) => {
+            btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             if (result.isConfirmed) {
-              location.reload()
+              console.log('Terjadi error!');
             }
           })
         }
@@ -119,12 +142,25 @@
     });
   }
   function pasien() {
+    let count_header = $(`#table-data thead tr th`).length;
     const nama_p = $('#nama_p').val();
+    console.log(count_header);
+    
     $.ajax({
       url: '<?= base_url("resepsionis/booking/pasien") ?>',
       data: { cari: nama_p },
       type: 'POST',
       dataType: 'JSON',
+       beforeSend: () => {
+        let loading = `<tr id="tr-loading">
+                                  <td colspan="${count_header}" class="text-center">
+                                      <div class="loader">
+                                          <img src="<?php echo base_url(); ?>assets/loading-table.gif" width="60" alt="loading">
+                                      </div>
+                                  </td>
+                              </tr>`;
+        $(`#table-data tbody`).html(loading);
+      },
       success: function (res) {
         if (res.status && res.data.length > 0) {
           let table = "";
@@ -340,7 +376,7 @@
               <div class="col-sm-10">
                 <div class="row">
                   <div class="col-sm-11">
-                    <input type="text" class="form-control" id="tampil_nama" placeholder="Klik Tombol Cari" readonly>
+                    <input type="text" class="form-control" id="tampil_nama" placeholder="Klik Tombol Cari" readonly required>
                   </div>
                   <div class="col-sm-1">
                     <button onclick="pasien()" class="btn btn-primary w-100">Cari</button>
@@ -350,33 +386,33 @@
             </div>
             <form id="form_tambah">
               <!-- 2 kolom inputan data pasien -->
-              <input type="hidden" class="form-control" name="nama_pasien" id="nama_pasien" placeholder="Nama pasien"
+              <input type="hidden" class="form-control" name="nama_pasien" id="nama_pasien" placeholder="Nama pasien" required
                 readonly>
-              <input type="hidden" class="form-control" name="id_pasien" id="id_pasien" placeholder="Nama pasien">
+              <input type="hidden" class="form-control" name="id_pasien" id="id_pasien" placeholder="Nama pasien" required>
               <div class="row">
                 <div class="col-md-6">
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-4 col-form-label">No RM</label>
                     <div class="col-sm-8">
-                      <input type="text" class="form-control" name="no_rm" id="no_rm" readonly>
+                      <input type="text" class="form-control" name="no_rm" id="no_rm" readonly required>
                     </div>
                   </div>
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-4 col-form-label">NIK</label>
                     <div class="col-sm-8">
-                      <input type="text" class="form-control" name="nik" id="nik" readonly>
+                      <input type="text" class="form-control" name="nik" id="nik" readonly required>
                     </div>
                   </div>
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-4 col-form-label">Jenis Kelamin</label>
                     <div class="col-sm-8">
-                      <input type="text" class="form-control" name="jenis_kelamin" id="jenis_kelamin" readonly>
+                      <input type="text" class="form-control" name="jenis_kelamin" id="jenis_kelamin" required readonly>
                     </div>
                   </div>
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-4 col-form-label">Tanggal Lahir</label>
                     <div class="col-sm-8">
-                      <input type="text" class="form-control" name="tanggal_lahir" id="tanggal_lahir" readonly>
+                      <input type="text" class="form-control" name="tanggal_lahir" id="tanggal_lahir" readonly required>
                     </div>
                   </div>
                   <div class="mb-3 row">
@@ -388,7 +424,7 @@
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-4 col-form-label">Alamat</label>
                     <div class="col-sm-8">
-                      <textarea name="alamat" id="alamat" class="form-control" readonly></textarea>
+                      <textarea name="alamat" id="alamat" class="form-control" readonly required></textarea>
                     </div>
                   </div>
                 </div>
@@ -396,43 +432,43 @@
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-4 col-form-label">Pekerjaan</label>
                     <div class="col-sm-8">
-                      <input type="text" class="form-control" name="pekerjaan" id="pekerjaan" readonly>
+                      <input type="text" class="form-control" name="pekerjaan" id="pekerjaan" readonly required>
                     </div>
                   </div>
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-4 col-form-label">No Telepon</label>
                     <div class="col-sm-8">
-                      <input type="text" class="form-control" name="telpon" id="telpon" readonly>
+                      <input type="text" class="form-control" name="telpon" id="telpon" readonly required>
                     </div>
                   </div>
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-4 col-form-label">Status Kawin</label>
                     <div class="col-sm-8">
-                      <input type="text" class="form-control" name="st_perkawinan" id="st_perkawinan" readonly>
+                      <input type="text" class="form-control" name="st_perkawinan" id="st_perkawinan" readonly required>
                     </div>
                   </div>
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-4 col-form-label">Nama Wali</label>
                     <div class="col-sm-8">
-                      <input type="text" class="form-control" name="nama_wali" id="nama_wali" readonly>
+                      <input type="text" class="form-control" name="nama_wali" id="nama_wali" readonly required>
                     </div>
                   </div>
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-4 col-form-label">Gol. Darah</label>
                     <div class="col-sm-8">
-                      <input type="text" class="form-control" name="golongan_darah" id="golongan_darah" readonly>
+                      <input type="text" class="form-control" name="golongan_darah" id="golongan_darah" readonly required>
                     </div>
                   </div>
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-4 col-form-label">Alergi</label>
                     <div class="col-sm-8">
-                      <input type="text" class="form-control" name="alergi" id="alergi" readonly>
+                      <input type="text" class="form-control" name="alergi" id="alergi" readonly required>
                     </div>
                   </div>
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-4 col-form-label">Riwayat Operasi</label>
                     <div class="col-sm-8">
-                      <input type="text" class="form-control" name="riwayat_operasi" id="riwayat_operasi" readonly>
+                      <input type="text" class="form-control" name="riwayat_operasi" id="riwayat_operasi" readonly required>
                     </div>
                   </div>
                 </div>
@@ -443,20 +479,20 @@
                     <label for="tambah_contoh" class="col-sm-2 col-form-label">Tanggal Kunjungan</label>
                     <div class="col-sm-10">
                       <input type="text" class="form-control" name="tanggal" id="tanggal" placeholder="Tanggal booking"
-                        autocomplete="off">
+                        autocomplete="off" required>
                     </div>
                   </div>
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-2 col-form-label">Waktu Kunjungan</label>
                     <div class="col-sm-10">
                       <input type="text" class="form-control" name="waktu" id="waktu" placeholder="Waktu booking"
-                        autocomplete="off">
+                        autocomplete="off" required>
                     </div>
                   </div>
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-2 col-form-label">Nama Poli</label>
                     <div class="col-sm-10">
-                      <select name="id_poli" id="id_poli" class="form-select">
+                      <select name="id_poli" id="id_poli" class="form-select" required>
                         <option value="">Pilih Poli..</option>
                       </select>
                       <input type="hidden" class="form-control" name="nama_poli" id="nama_poli"
@@ -466,7 +502,7 @@
                   <div class="mb-3 row">
                     <label for="tambah_contoh" class="col-sm-2 col-form-label">Dokter Tersedia</label>
                     <div class="col-sm-10">
-                      <select name="id_dokter" id="id_dokter" class="form-select">Pilih Nama Dokter</select>
+                      <select name="id_dokter" id="id_dokter" class="form-select" required>Pilih Nama Dokter</select>
                       <input type="hidden" class="form-control" name="nama_dokter" id="nama_dokter" readonly>
                     </div>
                   </div>

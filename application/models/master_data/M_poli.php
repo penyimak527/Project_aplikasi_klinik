@@ -15,7 +15,7 @@ class M_poli extends CI_Model
             $params[] = "%$cari%";
         }
 
-        $sql .= " ORDER BY a.id DESC";
+        $sql .= " ORDER BY a.id DESC";  
 
         $query = $this->db->query($sql, $params);
         return $query->result();
@@ -28,10 +28,24 @@ class M_poli extends CI_Model
     }
     public function tambah()
     {
-        $inputan = array(
-            'kode' => $this->input->post('kode'),
-            'nama' => ucwords($this->input->post('nama')),
-        );
+        
+    $nama = ucwords($this->input->post('nama'));
+    $kode = $this->input->post('kode');
+
+    $cek = $this->db->get_where('mst_poli', ['nama' => $nama])->row_array();
+
+    if ($cek) {
+        return [
+            'status' => false,
+            'message' => 'Nama poli sudah ada!'
+        ];
+    }
+
+    // Jika belum ada → lanjut insert
+    $inputan = [
+        'kode' => $kode,
+        'nama' => $nama
+    ];
         $this->db->trans_begin();
         $this->db->insert('mst_poli', $inputan);
         $this->db->trans_complete();

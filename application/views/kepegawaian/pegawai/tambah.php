@@ -5,7 +5,9 @@
 		$('#nama_p').hide();
 	});
 	function tambah(e) {
-		e.preventDefault();
+		 let btn = $(e.target).closest('button');
+    e.preventDefault();
+    btn.prop("disabled", true).text("Mengirim...");
 		const nama_p = $('#nama_pegawai').val();
 		const tp = $('#no_tp').val();
 		const nama_j = $('#nama_jabatan').val();
@@ -17,6 +19,7 @@
 				title: "Oops...",
 				text: "Inputan Kosong",
 			});
+			btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
 			return;
 		}
 		$.ajax({
@@ -24,6 +27,17 @@
 			method: 'POST',
 			data: $('#form_tambah').serialize(),
 			dataType: 'json',
+			 beforeSend: function () {
+        Swal.fire({
+            title: 'Mengupload...',
+            html: 'Mohon Ditunggu...',
+            allowEscapeKey: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    },
 			success: function (res) {
 				console.log(res);
 				if (res.status == true) {
@@ -54,9 +68,9 @@
 						closeOnConfirm: false,
 						allowOutsideClick: false
 					}).then((result) => {
+						btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
 						if (result.isConfirmed) {
-							// location.reload()
-							console.log(result);
+							console.log('Terjadi error!');
 						}
 					})
 				}

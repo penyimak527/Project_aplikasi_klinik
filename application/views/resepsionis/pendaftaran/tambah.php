@@ -53,16 +53,29 @@
   }
 
   function tambah(e) {
+    let btn = $(e.target).closest('button');
     e.preventDefault();
+    btn.prop("disabled", true).text("Mengirim...");
     if (!validateForm('#form_tambah')) {
+      btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
       return;
-    }
+    };
     $.post({
       url: '<?php echo base_url('resepsionis/pendaftaran/tambah') ?>',
       data: $('#form_tambah').serialize(),
       dataType: 'json',
+      beforeSend: function () {
+        Swal.fire({
+          title: 'Mengupload...',
+          html: 'Mohon Ditunggu...',
+          allowEscapeKey: false,
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+      },
       success: function (res, status) {
-        console.log(res, status);
         if (res.status == true) {
           Swal.fire({
             title: 'Berhasil!',
@@ -82,7 +95,7 @@
         } else {
           Swal.fire({
             title: 'Gagal!',
-            text: res.message,
+            html: res.message,
             icon: "error",
             showCancelButton: false,
             showConfirmButton: true,
@@ -91,9 +104,9 @@
             closeOnConfirm: false,
             allowOutsideClick: false
           }).then((result) => {
+            btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             if (result.isConfirmed) {
-              // location.reload()
-              console.log(result);
+              console.log('Terjadi error!');
             }
           })
         }
@@ -102,11 +115,23 @@
   }
   function pasien() {
     const nama_p = $('#nama_p').val();
+    let count_header = $(`#table-data thead tr th`).length;
     $.ajax({
       url: '<?= base_url("resepsionis/pendaftaran/pasien") ?>',
       data: { cari: nama_p },
       type: 'POST',
       dataType: 'JSON',
+      beforeSend: () => {
+        let loading = `<tr id="tr-loading">
+                                  <td colspan="${count_header}" class="text-center">
+                                      <div class="loader">
+                                          <img src="<?php echo base_url(); ?>assets/loading-table.gif" width="60" alt="loading">
+                                      </div>
+                                  </td>
+                              </tr>`;
+
+        $(`#table-data tbody`).html(loading);
+      },
       success: function (res) {
         if (res.status && res.data.length > 0) {
           let table = "";
@@ -394,7 +419,7 @@
                     <div class="mb-3 row">
                       <label for="tambah_contoh" class="col-sm-4 col-form-label">NIK</label>
                       <div class="col-sm-8">
-                        <input type="number" class="form-control" name="nik" id="nik" placeholder="NIK" readonly>
+                        <input type="text" class="form-control" name="nik" id="nik" placeholder="NIK" readonly>
                       </div>
                     </div>
                     <div class="mb-3 row">
@@ -422,7 +447,7 @@
                       <label for="tambah_contoh" class="col-sm-4 col-form-label">No Telpon</label>
                       <div class="col-sm-8">
                         <input type="text" class="form-control" name="no_telpon" id="no_telpon" placeholder="No telpon"
-                          readonly>
+                          readonly >
                       </div>
                     </div>
                     <div class="mb-3 row">
@@ -450,8 +475,7 @@
                     <div class="mb-3 row">
                       <label for="tambah_contoh" class="col-sm-4 col-form-label">NIK</label>
                       <div class="col-sm-8">
-                        <input type="number" class="form-control" name="nik1" id="nik1" placeholder="NIK"
-                          autocomplete="off" required>
+                        <input type="text" class="form-control" name="nik1" id="nik1" maxlength="16" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="NIK" autocomplete="off" required >
                       </div>
                     </div>
                     <div class="mb-3 row">
@@ -497,7 +521,7 @@
                       <label for="tambah_contoh" class="col-sm-4 col-form-label">No Telpon</label>
                       <div class="col-sm-8">
                         <input type="text" class="form-control" name="no_telpon1" id="no_telpon1"
-                          placeholder="No telpon" autocomplete="off" required>
+                          placeholder="No telpon" autocomplete="off" required inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                       </div>
                     </div>
                     <div class="mb-3 row">

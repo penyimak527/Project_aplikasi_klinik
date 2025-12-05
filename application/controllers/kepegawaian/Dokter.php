@@ -5,6 +5,9 @@ class Dokter extends CI_Controller
   {
     parent::__construct();
     date_default_timezone_set('Asia/Jakarta');
+      if($this->session->userdata('username') == null) {
+            redirect('login/login');
+        }
     $this->load->model('kepegawaian/m_dokter', 'model');
     $this->load->model('kepegawaian/m_jadwal');
   }

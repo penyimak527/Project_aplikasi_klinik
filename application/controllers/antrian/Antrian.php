@@ -5,6 +5,9 @@ class Antrian extends CI_Controller
   {
     parent::__construct();
     date_default_timezone_set('Asia/Jakarta');
+      if($this->session->userdata('username') == null) {
+            redirect('login/login');
+        }
     $this->load->model('antrian/m_antrian', 'model');
   }
   public function index()
@@ -70,49 +73,8 @@ class Antrian extends CI_Controller
       ->_display();
     exit;
   }
+  
 
-  public function tampil_card()
-  {
-    $data = $this->model->result_card();
-    if ($data) {
-      $response = array(
-        'result' => true,
-        'data' => $data
-      );
-    } else {
-      $response = array(
-        'result' => false,
-        'message' => 'Data Kosong'
-      );
-    }
-    $this->output
-      ->set_status_header(200)
-      ->set_content_type('application/json', 'utf-8')
-      ->set_output(json_encode($response, JSON_PRETTY_PRINT))
-      ->_display();
-    exit;
-  }
-  public function tampil_pasien()
-  {
-    $data = $this->model->result_sp();
-    if ($data) {
-      $response = array(
-        'result' => true,
-        'data' => $data
-      );
-    } else {
-      $response = array(
-        'result' => false,
-        'message' => 'Data Kosong'
-      );
-    }
-    $this->output
-      ->set_status_header(200)
-      ->set_content_type('application/json', 'utf-8')
-      ->set_output(json_encode($response, JSON_PRETTY_PRINT))
-      ->_display();
-    exit;
-  }
   public function dokter()
   {
     $data = $this->model->dokter();
@@ -137,7 +99,7 @@ class Antrian extends CI_Controller
     exit;
   }
 
-  public function selesai()
+  public function konfirmasi()
   {
     $response = $this->model->selesai();
 
@@ -182,5 +144,27 @@ class Antrian extends CI_Controller
     exit;
   }
 
+   public function cek_btn()
+  {
+    $response = $this->model->cek_status();
+
+    $this->output
+      ->set_status_header(200)
+      ->set_content_type('application/json', 'utf-8')
+      ->set_output(json_encode($response, JSON_PRETTY_PRINT))
+      ->_display();
+    exit;
+  }
+   public function cek_konfirmasi()
+  {
+    $response = $this->model->cek_konfirmasi();
+
+    $this->output
+      ->set_status_header(200)
+      ->set_content_type('application/json', 'utf-8')
+      ->set_output(json_encode($response, JSON_PRETTY_PRINT))
+      ->_display();
+    exit;
+  }
 }
 ?>

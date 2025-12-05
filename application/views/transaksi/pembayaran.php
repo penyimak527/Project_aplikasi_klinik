@@ -41,9 +41,31 @@
         // Format dengan separator ribuan
         return ' ' + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
-
+    // untuk validasi form pada bagian required
+    function validateForm(formSelector) {
+        let isValid = true;
+        $(formSelector + ' [required]').removeClass('is-invalid');
+        $(formSelector + ' [required]').each(function () {
+            if (!$(this).val() || $(this).val().trim() === '') {
+                isValid = false;
+                $(this).addClass('is-invalid');
+            }
+        });
+        if (!isValid) {
+            Swal.fire({
+                title: 'Gagal!',
+                text: 'Harap isi semua kolom yang wajib diisi.',
+                icon: 'error',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Oke'
+            });
+        }
+        return isValid;
+    }
     function tambah(e) {
+        let btn = $(e.target).closest('button');
         e.preventDefault();
+        btn.prop("disabled", true).text("Mengirim...");
         const formData = new FormData(document.getElementById('form_pembayaran'));
         // Convert nilai-nilai yang perlu diubah dari Rupiah ke angka
         const dataToSend = {
@@ -58,22 +80,27 @@
             metode_pembayaran: formData.get('metode_pembayaran'),
             bank: formData.get('bank')
         };
-        const metode = $('#metode_pembayaran').val();
-        const bayar = $('#bayar').val();
-
-        if (metode == '' || bayar == '') {
-            Swal.fire({
-                icon: "error",
-                title: "Oops...",
-                text: "Inputan Kosong",
-            });
+        if (!validateForm('#form_pembayaran')) {
+            btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             return;
-        }
+        };
         $.ajax({
             url: '<?php echo base_url('transaksi/pembayaran/tambah') ?>',
             method: 'POST',
             data: dataToSend,
             dataType: 'json',
+            beforeSend: function () {
+                Swal.fire({
+                    title: 'Mengupload...',
+                    html: 'Mohon Ditunggu...',
+                    allowEscapeKey: false,
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        $('#btn-simpan-pembayaran').prop('disabled', true);
+                        Swal.showLoading();
+                    }
+                });
+            },
             success: function (res) {
                 if (res.status == true) {
                     $('#modalPembayaran').modal('hide');
@@ -82,35 +109,14 @@
                         title: 'Berhasil!',
                         text: res.message,
                         icon: 'success',
-                        html: `
-                            <div class="text-start mt-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="cetak_struk_check" checked>
-                                    <label class="form-check-label" for="cetak_struk_check">
-                                        Cetak Struk
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="cetak_kwitansi_check" checked>
-                                    <label class="form-check-label" for="cetak_kwitansi_check">
-                                        Cetak Kwitansi
-                                    </label>
-                                </div>
-                            </div>
-                        `,
-                        confirmButtonText: '<i class="fas fa-print"></i> Proses Cetak',
-                        showDenyButton: true,
-                        denyButtonText: 'Tutup',
-                    }).then((result) => {
-                        console.log(result);
-                        if (result.isConfirmed) {
-                            if ($('#cetak_struk_check').is(':checked')) {
-                                window.open(`<?= base_url('transaksi/pembayaran/cetak_struk/'); ?>${res.kode_invoice}`, '_blank');
-                            }
-                            if ($('#cetak_kwitansi_check').is(':checked')) {
-                                window.open(`<?= base_url('transaksi/pembayaran/cetak_kwitansi/'); ?>${res.kode_invoice}`, '_blank');
-                            }
-                        }
+                        showCancelButton: false,
+                        showConfirmButton: true,
+                        confirmButtonColor: "#35baf5",
+                        confirmButtonText: "Oke",
+                        closeOnConfirm: false,
+                        allowOutsideClick: false
+                    }).then(() => {
+                        pindahhalaman(res.kode_invoice);
                     });
                 } else {
                     Swal.fire({
@@ -124,16 +130,19 @@
                         closeOnConfirm: false,
                         allowOutsideClick: false
                     }).then((result) => {
+                        btn.prop("disabled", false).text('<i class="fas fa-save me-2"></i>Simpan');
                         if (result.isConfirmed) {
-                            //   location.reload()
-                            Swal.fire('Gagal!', res.message, 'error');
+                            console.log('Terjadi error!');
                         }
                     })
                 }
             }
         });
     }
-
+    function pindahhalaman(kode_invoice) {
+        window.open(`<?= base_url('transaksi/pembayaran/cetak_struk/'); ?>${kode_invoice}`, '_blank');
+        window.open(`<?= base_url('transaksi/pembayaran/cetak_kwitansi/'); ?>${kode_invoice}`, '_blank');
+    }
     function get_data() {
         let cari = $('#cari').val();
         let count_header = $(`#table-data thead tr th`).length;
@@ -440,7 +449,8 @@
                         <div class="col-sm-3">
                             <div class="input-group">
                                 <div class="input-group-text"><i class="fas fa-search"></i></div>
-                                <input type="text" class="form-control" id="cari" placeholder="Cari Invoice/Pasien/NIK" autocomplete="off">
+                                <input type="text" class="form-control" id="cari" placeholder="Cari Invoice/Pasien/NIK"
+                                    autocomplete="off">
                             </div>
                         </div>
                     </div>

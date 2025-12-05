@@ -21,9 +21,20 @@ class M_jenis_biaya extends CI_Model
   }
   public function tambah()
   {
-    $inputan = array(
-      'nama' => ucfirst($this->input->post('jenis_biaya'))
-    );
+    $nama = ucfirst($this->input->post('jenis_biaya'));
+    $cek = $this->db->get_where('rsp_jenis_biaya', ['nama' => $nama])->row_array();
+
+    if ($cek) {
+      return [
+        'status' => false,
+        'message' => 'Nama Jenis Biaya sudah ada!'
+      ];
+    }
+
+    // Jika belum ada → lanjut insert
+    $inputan = [
+      'nama' => $nama
+    ];
     $this->db->trans_begin();
     $this->db->insert('rsp_jenis_biaya', $inputan);
     $this->db->trans_complete();

@@ -65,41 +65,77 @@
 		$(document).ready(function () {
 			get_data();
 		});
+		let indexPanggil = 0;
+let listPanggilan = [];
+
+setInterval(() => {
+    get_data();
+}, 3200);
+
 		function get_data() {
 			let count_header = $(`#table-data thead tr th`).length;
 			$.get({
 				url: "<?php echo base_url(); ?>antrian/antrian/result_data",
-				beforeSend: () => {
-					let loading = `<tr id="tr-loading">
-								  <td colspan="${count_header}" class="text-center">
-									  <div class="loader">
-										  <img src="<?php echo base_url(); ?>assets/loading-table.gif" width="60" alt="loading">
-									  </div>
-								  </td>
-							  </tr>`;
-					$(`#table-data tbody`).html(loading);
-				},
-				success: function (res) {
-					let table = "";
-					console.log(res);
-					if (!res.result || res.data == 0) {
-						panggil(null);
-						htmltable([]);
-						return;
-					}
-					const data_panggil = res.data.find(item => item.status_antrian == 'Dipanggil');
-					panggil(data_panggil);
-					const data_menunggu = res.data.filter(items => items.status_antrian == 'Menunggu');
-					htmltable(data_menunggu);
+			beforeSend: () => {
+			let loading = `<tr id="tr-loading">
+				<td colspan="${count_header}" class="text-center">
+					<div class="loader">
+						<img src="<?php echo base_url(); ?>assets/loading-table.gif" width="60" alt="loading">
+					</div>
+				</td>
+			</tr>`;
+			$(`#table-data tbody`).html(loading);
+		},
 
-				},
-				error: function (jqXHR, textStatus, errorThrown) {
-					console.error("Gagal mengambil data antrian:", textStatus, errorThrown);
-					panggil(null);
-					htmltable([]);
-				},
+		success: function (res) {
+			console.log(res);
+
+			if (!res.result || res.data.length === 0) {
+				panggil(null);
+				htmltable([]);
+				return;
+			}
+
+			// Tentukan data yg Dipanggil
+			const data_panggil = res.data.find(item => item.status_antrian == 'Dipanggil');
+			panggil(data_panggil);
+
+			// Rotasi
+			listPanggilan = res.data.filter(item => item.status_antrian == 'Dipanggil');
+			panggilRotate();
+
+			// Data yang menunggu
+			const data_menunggu = res.data.filter(items => items.status_antrian == 'Menunggu');
+			htmltable(data_menunggu);
+		},
+
+		error: function (xhr, status, error) {
+			console.error(status, error);
+			panggil(null);
+			htmltable([]);
+		}
 			});
 		}
+		function panggilRotate() {
+    if (listPanggilan.length === 0) {
+        $("#nomor_panggil").text("-");
+        $("#poli_panggil").text("-");
+        $("#dokter_panggil").text("-");
+        return;
+    }
+
+    if (indexPanggil >= listPanggilan.length) {
+        indexPanggil = 0;
+    }
+
+    let d = listPanggilan[indexPanggil];
+
+    $("#nomor_panggil").text(d.no_antrian);
+    $("#poli_panggil").text(d.nama_poli);
+    $("#dokter_panggil").text(ucwords(d.nama_dokter));
+
+    indexPanggil++;
+}
 		function ucwords(str) {
 			return str.toLowerCase().replace(/(?:^|\s)\w/g, function (match) {
 				return match.toUpperCase();
@@ -119,7 +155,7 @@
 		}
 		function htmltable(data_menunggu) {
 			let tablehtml = '';
-			if (!data_menunggu == 0) {
+			if (data_menunggu.length >  0) {
 				data_menunggu.forEach((item) => {
 					tablehtml += `
 				<tr>

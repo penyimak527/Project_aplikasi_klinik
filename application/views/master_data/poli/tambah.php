@@ -1,6 +1,9 @@
 <script type="text/javascript">
   function tambah(e) {
+    let btn = $(e.target).closest('button');
     e.preventDefault();
+    btn.prop("disabled", true).text("Mengirim...");
+
     const kode = $('#kode').val();
     const nama = $('#nama').val();
     if (kode == "" || nama == "") {
@@ -9,6 +12,7 @@
         title: "Oops...",
         text: "Inputan Kosong",
       });
+      btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
       return;
     }
 
@@ -17,9 +21,18 @@
       method: 'POST',
       data: $('#form_tambah').serialize(),
       dataType: 'json',
+      beforeSend: function () {
+        Swal.fire({
+          title: 'Mengupload...',
+          html: 'Mohon Ditunggu...',
+          allowEscapeKey: false,
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+      },
       success: function (res) {
-        console.log(res);
-
         if (res.status == true) {
           Swal.fire({
             title: 'Berhasil!',
@@ -48,8 +61,9 @@
             closeOnConfirm: false,
             allowOutsideClick: false
           }).then((result) => {
+            btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             if (result.isConfirmed) {
-              location.reload()
+              console.log('Terjadi error!');
             }
           })
         }
@@ -85,7 +99,7 @@
             <form id="form_tambah">
               <!-- inputan start -->
               <div class="mb-3 row">
-                <label for="tambah_contoh" class="col-sm-2 col-form-label">kode</label>
+                <label for="tambah_contoh" class="col-sm-2 col-form-label">Kode</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="kode" id="kode" placeholder="Kode" required
                     autocomplete="off">
@@ -100,8 +114,8 @@
               <!-- inputan end -->
               <div class="row">
                 <div class="col-sm-10 ms-auto">
-                  <button type="button" onclick="tambah(event);" class="btn btn-success"><i
-                      class="fas fa-save me-2"></i>Simpan</button>
+                  <button type="button" onclick="tambah(event);" class="btn btn-success"><i class="fas fa-save me-2"
+                      id="btnSubmit"></i>Simpan</button>
                   <a href="<?php echo base_url(); ?>master_data/poli"><button type="button" class="btn btn-warning"><i
                         class="fas fa-reply me-2"></i>Kembali</button></a>
                 </div>

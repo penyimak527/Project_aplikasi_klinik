@@ -5,6 +5,9 @@ class Pasien extends CI_Controller
   {
     parent::__construct();
     date_default_timezone_set('Asia/Jakarta');
+      if($this->session->userdata('username') == null) {
+            redirect('login/login');
+        }
     $this->load->model('resepsionis/m_pasien', 'model');
   }
   public function index()
@@ -46,14 +49,6 @@ class Pasien extends CI_Controller
     $data['active'] = 'Resepsionis';
     $data['title'] = 'Pasien';
 
-    // if ($ambil) {
-    //   # code...
-    //   $last_num = (int) substr($ambil, 3); //ambil angka setelah rm
-    //   $next_num = $last_num + 1;
-    //   $data['kode_rm'] = 'RM-'. str_pad($next_num, 4,'0', STR_PAD_LEFT);
-    // }else {
-    //   $data['kode_rm'] = 'RM-0001';
-    // }
     $this->load->view('templates/header', $data);
     $this->load->view('resepsionis/pasien/tambah', $data);
     $this->load->view('templates/footer');
@@ -72,7 +67,18 @@ class Pasien extends CI_Controller
 
   public function tambah()
   {
-    $response = $this->model->tambah();
+    $this->form_validation->set_rules('nama_pasien', 'Nama Pasien', 'required');
+    $this->form_validation->set_rules('nik', 'NIK', 'required|numeric|min_length[16]|max_length[16]');
+      if ($this->form_validation->run() == FALSE) {
+        // Kirim error ke AJAX
+        $response = [
+            'status' => false,
+            'message'  => validation_errors()
+        ];
+    } else {
+        // Jika valid, baru simpan ke model
+        $response = $this->model->tambah();
+    }
 
     $this->output
       ->set_status_header(200)

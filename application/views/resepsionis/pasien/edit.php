@@ -5,26 +5,51 @@
       st_perkawinan(),
       tgl()
   })
+  // untuk validasi form pada bagian required
+	function validateForm(formSelector) {
+		let isValid = true;
+		$(formSelector + ' [required]').removeClass('is-invalid');
+		$(formSelector + ' [required]').each(function () {
+			if (!$(this).val() || $(this).val().trim() === '') {
+				isValid = false;
+				$(this).addClass('is-invalid');
+			}
+		});
+		if (!isValid) {
+			Swal.fire({
+				title: 'Gagal!',
+				text: 'Harap isi semua kolom yang wajib diisi.',
+				icon: 'error',
+				confirmButtonColor: '#3085d6',
+				confirmButtonText: 'Oke'
+			});
+		}
+		return isValid;
+	}
   function edit(e) {
-    e.preventDefault()
-    const nama = $('#nama_pasien').val();
-    const nik = $('#nik').val();
-    const alamat = $('#alamat').val();
-    const tanggal_lahir = $('#tanggal_lahir').val();
-    const nama_wali = $('#nama_wali').val();
-    if (nama == "" || nik == '' || tanggal_lahir == '' || umur == '' || alamat == '' || nama_wali == '') {
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "Inputan Kosong",
-      });
-      return;
-    }
+     let btn = $(e.target).closest('button');
+    e.preventDefault();
+    btn.prop("disabled", true).text("Mengirim...");
+if (!validateForm('#form_edit')) {
+			btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
+			return;
+		};
     $.ajax({
       url: '<?php echo base_url('resepsionis/pasien/edit') ?>',
       method: 'POST',
       data: $('#form_edit').serialize(),
       dataType: 'json',
+       beforeSend: function () {
+        Swal.fire({
+            title: 'Mengupload...',
+            html: 'Mohon Ditunggu...',
+            allowEscapeKey: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    },
       success: function (res) {
         if (res.status == true) {
           Swal.fire({
@@ -45,7 +70,7 @@
         } else {
           Swal.fire({
             title: 'Gagal!',
-            text: res.message,
+            html: res.message,
             icon: "error",
             showCancelButton: false,
             showConfirmButton: true,
@@ -54,8 +79,9 @@
             closeOnConfirm: false,
             allowOutsideClick: false
           }).then((result) => {
+            btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             if (result.isConfirmed) {
-              location.reload()
+              console.log('Terjadi error!');
             }
           })
         }
@@ -161,20 +187,20 @@
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Nama Pasien</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="nama_pasien" id="nama_pasien"
-                    value="<?php echo $row['nama_pasien'] ?>" placeholder="Input nama pasien">
+                    value="<?php echo $row['nama_pasien'] ?>" placeholder="Input nama pasien" required>
                 </div>
               </div>
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">NIK</label>
                 <div class="col-sm-10">
-                  <input type="number" class="form-control" name="nik" id="nik" value="<?php echo $row['nik'] ?>"
-                    placeholder="Input NIK">
+                  <input type="text" class="form-control" name="nik" id="nik" value="<?php echo $row['nik'] ?>"
+                    placeholder="Input NIK" maxlength="16" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                 </div>
               </div>
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Jenis Kelamin</label>
                 <div class="col-sm-10">
-                  <select name="jk" id="jk" class="form-select">
+                  <select name="jk" id="jk" class="form-select" required>
                     <option value="">Pilih Jenis Kelamin</option>
                   </select>
                 </div>
@@ -184,7 +210,7 @@
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="tgl_lahir" id="tgl_lahir"
                     value="<?php echo date('d-m-Y', strtotime($row['tanggal_lahir'])) ?>"
-                    placeholder="Input tanggal lahir" autocomplete="off">
+                    placeholder="Input tanggal lahir" autocomplete="off" required>
                 </div>
               </div>
               <div class="mb-3 row">
@@ -197,7 +223,7 @@
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Alamat</label>
                 <div class="col-sm-10">
-                  <textarea name="alamat" id="alamat" class="form-control"><?php echo $row['alamat'] ?></textarea>
+                  <textarea name="alamat" id="alamat" class="form-control" required><?php echo $row['alamat'] ?></textarea>
                 </div>
               </div>
               <div class="mb-3 row">
@@ -211,26 +237,28 @@
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">No Telpon</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="no_tp" id="no_tp" value="<?php echo $row['no_telp'] ?>"
-                    placeholder="Input no telpon">
+                    placeholder="Input no telpon" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                 </div>
               </div>
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Status Perkawinan</label>
                 <div class="col-sm-10">
-                  <select name="st_perkawinan" id="st_perkawinan" class="form-select"></select>
+                  <select name="st_perkawinan" id="st_perkawinan" class="form-select" required></select>
                 </div>
               </div>
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Nama Wali</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="nama_wali" id="nama_wali"
-                    value="<?php echo $row['nama_wali'] ?>" placeholder="Input nama wali">
+                    value="<?php echo $row['nama_wali'] ?>" placeholder="Input nama wali" required>
                 </div>
               </div>
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Golongan Darah</label>
                 <div class="col-sm-10">
-                  <select name="golongan_darah" id="golongan_darah" class="form-select">
+                  <select name="golongan_darah" id="golongan_darah" class="form-select" required>
+
+                  
                   </select>
                 </div>
               </div>
@@ -238,7 +266,7 @@
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Alergi</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="alergi" id="alergi" value="<?php echo $row['alergi'] ?>"
-                    placeholder="Input alergi">
+                    placeholder="Input alergi" required>
                   <span class="form-text mt-1 text-danger"><strong>Perhatian: </strong>jika pasien tidak ada riwayat
                     alergi isi dengan "-"</span>
                 </div>
@@ -247,7 +275,7 @@
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Status Operasi</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="status_op" id="status_op"
-                    value="<?php echo $row['status_operasi'] ?>" placeholder="Input status operasi">
+                    value="<?php echo $row['status_operasi'] ?>" placeholder="Input status operasi" required>
                   <span class="form-text mt-1 text-danger"><strong>Perhatian: </strong>jika pasien tidak ada riwayat
                     operasi isi dengan "-"</span>
                 </div>

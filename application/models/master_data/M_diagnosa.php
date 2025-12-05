@@ -28,16 +28,28 @@ class M_diagnosa extends CI_Model
 
     public function tambah()
     {
-        $inputan = array(
-            'nama_diagnosa'     => ucfirst($this->input->post('nama_diag')),
-            'id_poli'           => $this->input->post('id_poli'),
-            'nama_poli'         => $this->input->post('nama_poli')
-        );
+        
+    $nama = ucfirst($this->input->post('nama_diag'));
+    $id_poli = $this->input->post('id_poli');
+    $nama_poli = $this->input->post('nama_poli');
 
+    $cek = $this->db->get_where('mst_diagnosa', ['nama_diagnosa' => $nama])->row_array();
+
+    if ($cek) {
+        return [
+            'status' => false,
+            'message' => 'Diagnosa sudah ada!'
+        ];
+    }
+
+    // Jika belum ada → lanjut insert
+    $inputan = [
+         'nama_diagnosa'     => $nama,
+            'id_poli'           => $id_poli,
+            'nama_poli'         => $nama_poli
+    ];
         $this->db->trans_begin();
-
         $this->db->insert('mst_diagnosa', $inputan);
-
         $this->db->trans_complete();
 
         if ($this->db->trans_status() === FALSE) {

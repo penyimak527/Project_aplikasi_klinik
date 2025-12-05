@@ -2,38 +2,52 @@
   $(document).ready(function () {
     tgl()
   })
+  // untuk validasi form pada bagian required
+	function validateForm(formSelector) {
+		let isValid = true;
+		$(formSelector + ' [required]').removeClass('is-invalid');
+		$(formSelector + ' [required]').each(function () {
+			if (!$(this).val() || $(this).val().trim() === '') {
+				isValid = false;
+				$(this).addClass('is-invalid');
+			}
+		});
+		if (!isValid) {
+			Swal.fire({
+				title: 'Gagal!',
+				text: 'Harap isi semua kolom yang wajib diisi.',
+				icon: 'error',
+				confirmButtonColor: '#3085d6',
+				confirmButtonText: 'Oke'
+			});
+		}
+		return isValid;
+	}
   function tambah(e) {
+     let btn = $(e.target).closest('button');
     e.preventDefault();
-    const nama = $('#nama_pasien').val();
-    const nik = $('#nik').val();
-    const jk = $('#jk').val();
-    const tanggal_lahir = $('#tgl_lahir').val();
-    const umur = $('#umur').val();
-    const alamat = $('#alamat').val();
-    const pekerjaan = $('#pekerjaan').val();
-    const no_tp = $('#no_tp').val();
-    const st_perkawinan = $('#st_perkawinan').val();
-    const nama_wali = $('#nama_wali').val();
-    const golongan = $('#golongan_darah').val();
-    const alergi = $('#alergi').val();
-    const status_op = $('#status_op').val();
-
-    if (nama == "" || nik == '' || tanggal_lahir == '' || umur == '' || alamat == '' || no_tp == '' || status_op == '') {
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "Inputan Kosong",
-      });
-      return;
-    }
+    btn.prop("disabled", true).text("Mengirim...");
+if (!validateForm('#form_tambah')) {
+			btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
+			return;
+		};
     $.ajax({
       url: '<?php echo base_url('resepsionis/pasien/tambah') ?>',
       method: 'POST',
       data: $('#form_tambah').serialize(),
       dataType: 'json',
+       beforeSend: function () {
+        Swal.fire({
+            title: 'Mengupload...',
+            html: 'Mohon Ditunggu...',
+            allowEscapeKey: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    },
       success: function (res, status) {
-        console.log(res, status);
-
         if (res.status == true) {
           Swal.fire({
             title: 'Berhasil!',
@@ -53,7 +67,7 @@
         } else {
           Swal.fire({
             title: 'Gagal!',
-            text: res.message,
+            html: res.message,
             icon: "error",
             showCancelButton: false,
             showConfirmButton: true,
@@ -62,9 +76,9 @@
             closeOnConfirm: false,
             allowOutsideClick: false
           }).then((result) => {
+            btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             if (result.isConfirmed) {
-              location.reload()
-              // console.log('Gagal menambahkan data');
+              console.log('Terjadi error!');
             }
           })
         }
@@ -127,19 +141,19 @@
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Nama Pasien</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="nama_pasien" id="nama_pasien" placeholder="Nama pasien"
-                    autocomplete="off">
+                    autocomplete="off" required>
                 </div>
               </div>
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">NIK</label>
                 <div class="col-sm-10">
-                  <input type="number" class="form-control" name="nik" id="nik" placeholder="NIK" autocomplete="off">
+                  <input type="text" class="form-control" name="nik" id="nik" placeholder="NIK" autocomplete="off" maxlength="16" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                 </div>
               </div>
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Jenis Kelamin</label>
                 <div class="col-sm-10">
-                  <select name="jk" id="jk" class="form-select">
+                  <select name="jk" id="jk" class="form-select" required>
                     <option value="">Pilih Jenis Kelamin</option>
                     <option value="Laki-laki">Laki-laki</option>
                     <option value="Perempuan">Perempuan</option>
@@ -150,7 +164,7 @@
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Tanggal Lahir</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="tgl_lahir" onclick="tgl()" id="tgl_lahir"
-                    placeholder="Tanggal lahir" autocomplete="off">
+                    placeholder="Tanggal lahir" autocomplete="off" required>
                 </div>
               </div>
               <div class="mb-3 row">
@@ -162,27 +176,27 @@
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Alamat</label>
                 <div class="col-sm-10">
-                  <textarea name="alamat" id="alamat" placeholder="Alamat" class="form-control"></textarea>
+                  <textarea name="alamat" id="alamat" placeholder="Alamat" class="form-control" required></textarea>
                 </div>
               </div>
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Pekerjaan</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="pekerjaan" id="pekerjaan" placeholder="Pekerjaan"
-                    autocomplete="off">
+                    autocomplete="off" required>
                 </div>
               </div>
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">No Telpon</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="no_tp" id="no_tp" placeholder="No telpon"
-                    autocomplete="off">
+                    autocomplete="off" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                 </div>
               </div>
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Status Perkawinan</label>
                 <div class="col-sm-10">
-                  <select name="st_perkawinan" id="st_perkawinan" class="form-select">
+                  <select name="st_perkawinan" id="st_perkawinan" class="form-select" required>
                     <option value="">Pilih Status</option>
                     <option value="Belum Kawin">Belum Kawin</option>
                     <option value="Kawin">Kawin</option>
@@ -195,13 +209,13 @@
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Nama Wali</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="nama_wali" id="nama_wali" placeholder="Nama wali"
-                    autocomplete="off">
+                    autocomplete="off" required>
                 </div>
               </div>
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Golongan Darah</label>
                 <div class="col-sm-10">
-                  <select name="golongan_darah" id="golongan_darah" class="form-select">
+                  <select name="golongan_darah" id="golongan_darah" class="form-select" required>
                     <option value="">Pilih Golongan Darah</option>
                     <option value="A">A</option>
                     <option value="B">B</option>
@@ -214,7 +228,7 @@
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Alergi</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="alergi" id="alergi" placeholder="Alergi"
-                    autocomplete="off">
+                    autocomplete="off" required>
                   <span class="form-text mt-1 text-danger"><strong>Perhatian: </strong>jika pasien tidak ada riwayat
                     alergi isi dengan "-"</span>
                 </div>
@@ -223,7 +237,7 @@
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Status Operasi</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="status_op" id="status_op" placeholder="Status operasi"
-                    autocomplete="off">
+                    autocomplete="off" required>
                   <span class="form-text mt-1 text-danger"><strong>Perhatian: </strong>jika pasien tidak ada riwayat
                     operasi isi dengan "-"</span>
                 </div>

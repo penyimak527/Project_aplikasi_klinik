@@ -1,6 +1,8 @@
 <script type="text/javascript">
   function edit(e) {
+     let btn = $(e.target).closest('button');
     e.preventDefault();
+    btn.prop("disabled", true).text("Mengirim...");
     const nama = $('#nama_jabatan').val();
     if (nama == "") {
       Swal.fire({
@@ -8,6 +10,7 @@
         title: "Oops...",
         text: "Inputan Kosong",
       });
+      btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
       return;
     }
     $.ajax({
@@ -15,8 +18,18 @@
       method: 'POST',
       data: $('#form_edit').serialize(),
       dataType: 'json',
+       beforeSend: function () {
+        Swal.fire({
+            title: 'Mengupload...',
+            html: 'Mohon Ditunggu...',
+            allowEscapeKey: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    },
       success: function (res) {
-        console.log(res);
         if (res.status == true) {
           Swal.fire({
             title: 'Berhasil!',
@@ -45,8 +58,9 @@
             closeOnConfirm: false,
             allowOutsideClick: false
           }).then((result) => {
+            btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             if (result.isConfirmed) {
-              location.reload()
+              console.log('Terjadi error!');
             }
           })
         }

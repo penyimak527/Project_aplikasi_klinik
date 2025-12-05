@@ -2,7 +2,7 @@
   $(document).ready(function () {
     get_data();
     select();
-    $("#jumlah_tampil").change(function () {
+    $("#jumlah_tampil_antrian").change(function () {
       get_data();
     });
     $("#jumlah_tampil_konfirmasi").change(function () {
@@ -16,21 +16,43 @@
       $("#sudah_konfirmasi").show();
       $("#masih_antri").hide();
     });
-     $(document).on('change', '#poli-select', function () {
-        get_data(); // Refresh data ketika poli berubah
+    $(document).on('change', '#poli-select', function () {
+      get_data(); // Refresh data ketika poli berubah
     });
   });
   function get_data() {
     let cari = $("#cari").val();
-    let count_header = $(`#table-antrian thead tr th`).lengths;
+    let count_header = $(`#table-antrian thead tr th`).length;
+    let count_headerk = $(`#table-konfirmasi thead tr th`).length;
     let selectedPoli = $("#poli-select").val(); // Ambil nilai poli yang dipilih
-    
+    const pilih = 'Pilih terlebih poli terlebih dahulu!';
+    if (selectedPoli == null || selectedPoli === '-') {
+
+        // TAMPILKAN PESAN DI TABLE ANTRIAN
+        $("#table-antrian tbody").html(`
+            <tr>
+                <td colspan="${count_header}" class="text-center">
+                    Pilih poli terlebih dahulu!
+                </td>
+            </tr>
+        `);
+
+        // TAMPILKAN PESAN DI TABLE KONFIRMASI
+        $("#table-konfirmasi tbody").html(`
+            <tr>
+                <td colspan="${count_headerk}" class="text-center">
+                    Pilih poli terlebih dahulu!
+                </td>
+            </tr>
+        `);
+
+        return; 
+    }
     $.ajax({
       url: "<?php echo base_url(); ?>antrian/antrian/result_data",
-      // data: { cari },
-      data: { 
-        poli : selectedPoli,
-       },
+      data: {
+        poli: selectedPoli,
+      },
       type: "POST",
       dataType: "json",
       beforeSend: () => {
@@ -47,46 +69,86 @@
       success: function (res) {
         let table = "";
         let table1 = "";
-        console.log(res);
         if (res.result) {
+          let dataMenunggu = res.data.filter(item => item.status_antrian !== "Konfirmasi");
+          let dataKonfirmasi = res.data.filter(item => item.status_antrian === "Konfirmasi");
+          // Jika kosong → tampilkan placeholder
+          if (dataMenunggu.length === 0) {
+            table += `
+        <tr>
+            <td colspan="${count_header}" class="text-center">Antrian Kosong</td>
+        </tr>
+    `;
+          }
+
+          if (dataKonfirmasi.length === 0) {
+            table1 += `
+        <tr>
+            <td colspan="${count_headerk}" class="text-center">Konfirmasi Antrian Kosong</td>
+        </tr>
+    `;
+          }
           let i = 1;
+          let activeIndex = res.data.findIndex(item => item.status_antrian !== "Konfirmasi");
+          if (activeIndex === -1) activeIndex = 99999;
           for (const item of res.data) {
+            let statusbd = "";
+            if (item.status_antrian === "Menunggu") {
+              statusbd = `<span class="badge bg-warning">${item.status_antrian}</span>`;
+            }
+            if (item.status_antrian === "Dipanggil") {
+              statusbd = `<span class="badge bg-info">${item.status_antrian}</span>`;
+            }
+            if (item.status_antrian === "Konfirmasi") {
+              statusbd = `<span class="badge bg-success">${item.status_antrian}</span>`;
+            }
             if (item.status_antrian == "Konfirmasi") {
               table1 += `
                             <tr>
                                 <td>${item.no_antrian}</td>
                                 <td>${item.nama_pasien}</td>
                                 <td>${item.nama_poli}</td>
-                                <td><span class="badge bg-success">${item.status_antrian}</span></td>
+                                <td>${statusbd}</td>
+                                <td><button id="btnView_${item.kode_invoice}" 
+        class="btn btn-info btn-sm"
+        onclick="v_konfirm('${item.kode_invoice}')">
+    <i class="fas fa-eye"></i> View
+</button></td>
                             </tr>
                         `;
+               cekButtonKecantikan(item.kode_invoice);
             } else {
               let aksiButton = "";
-              let statusbd = "";
-              if (item.status_antrian == "Menunggu") {
-                statusbd = `<span class="badge bg-warning">${item.status_antrian}</span>`;
-                aksiButton = `
+              if ((i - 1) === activeIndex) {
+                if (item.status_antrian == "Menunggu") {
+                  aksiButton = `
                           <button type="button" class="btn btn-shadow btn-sm btn-success" title="Panggil" onclick="panggil(${item.id})" ><i class="fas fa-volume-up me-2"></i>Panggil</button>
                           `;
-              } else if (item.status_antrian == "Dipanggil") {
-                statusbd = `<span class="badge bg-info">${item.status_antrian}</span>`;
-                aksiButton = `
+                }
+                if (item.status_antrian == "Dipanggil") {
+
+                  aksiButton = `
                           <button type="button" class="btn btn-shadow btn-sm btn-info" title="Panggil" onclick="panggil(${item.id
-                  })" ><i class="fas fa-redo-alt me-2"></i>Panggil Ulang</button>
+                    })" ><i class="fas fa-redo-alt me-2"></i>Panggil Ulang</button>
                           <button type="button" class="btn btn-shadow btn-sm btn-primary" title="Konfirmasi" onclick="konfirmasi('${btoa(
-                    JSON.stringify(item)
-                  )}')" ><i class="fas fa-check-circle me-2"></i>Konfirmasi</button>
+                      JSON.stringify(item)
+                    )}')" ><i class="fas fa-check-circle me-2"></i>Konfirmasi</button>
                           `;
+                }
+              } else {
+                // BARIS TIDAK AKTIF – tombol mati
+                aksiButton = `
+                <button class="btn btn-secondary btn-sm" disabled>Tidak Aktif</button>
+            `;
               }
+
               table += `
                              <tr>
                                 <td>${item.no_antrian}</td>
                                 <td>${item.nama_pasien}</td>
                                 <td>${item.nama_poli}</td>
                                 <td>${statusbd}</td>
-                                <td class="text-center">
-                                ${aksiButton}
-                                </td>
+                                <td class="text-center">${aksiButton}</td>
                             </tr>
                         `;
             }
@@ -95,12 +157,12 @@
         } else {
           table += `
                         <tr>
-                            <td colspan="5" class="text-center">Data Kosong</td>
+                            <td colspan="${count_header}" class="text-center">Antrian Kosong</td>
                         </tr>
                     `;
           table1 += `
                         <tr>
-                            <td colspan="4" class="text-center">Data Kosong</td>
+                            <td colspan="${count_headerk}" class="text-center">Antrian Kosong</td>
                         </tr>
                     `;
         }
@@ -121,13 +183,143 @@
         get_data();
       });
   }
+  function cekButtonKecantikan(kode_invoice) {
+    $.ajax({
+      url: "<?= base_url('antrian/antrian/cek_btn') ?>",
+      type: "POST",
+      data: {
+        kode_invoice: kode_invoice  // Perbaiki format data
+      },
+      dataType: "json",
+      success: function (res) {
+        let btn = $("#btnView_" + kode_invoice);
+        if (!btn.length) {
+          console.log('Button not found: btnView_' + kode_invoice);
+          return;
+        }
 
+        // Jika tidak ada pol_kecantikan → tombol hide
+        if (res.status === 'tidak_ada_pol') {
+          btn.hide();
+          console.log('Hiding button - tidak ada pol');
+          return;
+        }
+        if (res.status === 'data_belum_lengkap') {
+          btn.hide();
+          console.log('Hiding button - Data Belum Lengkap');
+          return;
+        }
+
+        // Jika status error
+        if (res.status === 'error') {
+          console.log('Error:', res.message);
+          return;
+        }
+
+        // Jika tindakan atau diagnosa kosong → disable
+        if (res.tindakan == 0 || res.diagnosa == 0) {
+          // Lengkap → tombol aktif
+          btn.prop("disabled", false)
+            .removeClass("btn-secondary")
+            .addClass("btn-info")
+            .html('<i class="fas fa-eye"></i> View');
+          console.log('Button enabled - Data Belum Lengkap');
+        }
+
+        else {
+          btn.hide();
+          console.log('Hiding button - Data Belum Lengkap');
+          return;
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log('AJAX Error:', error);
+        console.log('Status:', status);
+        console.log('Response:', xhr.responseText);
+      }
+    });
+  }
+  function v_konfirm(kode_invoice) {
+    $.post({
+      url: "<?= base_url() ?>antrian/antrian/cek_konfirmasi",
+      data: {
+        kode_invoice: kode_invoice  // Perbaiki format data
+      },
+      dataType: "JSON",
+      beforeSend: function () {
+        Swal.fire({
+          title: 'Mengecek Data Pasien...',
+          html: 'Mohon Ditunggu...',
+          allowEscapeKey: false,
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+      },
+      success: function (data) {
+        Swal.close();
+        if (data.status == 'ada') {
+          Swal.fire({
+            title: "Berhasil!",
+            text: "Data pasien siap dilihat",
+            icon: "success",
+            showCancelButton: false,
+            showConfirmButton: true,
+            confirmButtonColor: "#35baf5",
+            confirmButtonText: "Oke",
+            allowOutsideClick: false,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              // Redirect ke poli kecantikan
+              window.location.href = "<?php echo base_url() ?>poli/kecantikan/view_proses/" + kode_invoice;
+            }
+          });
+        } else {
+          Swal.fire({
+            title: "Data Belum Lengkap",
+            text: "Tindakan atau diagnosa belum diisi",
+            icon: "warning",
+            showCancelButton: false,
+            showConfirmButton: true,
+            confirmButtonColor: "#35baf5",
+            confirmButtonText: "Oke",
+            allowOutsideClick: false,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              get_data();
+            }
+          });
+        }
+      },
+      error: function (xhr, status, error) {
+        console.log('Error:', error);
+        Swal.fire({
+          title: "Error",
+          text: "Terjadi kesalahan saat memeriksa data",
+          icon: "error",
+          confirmButtonText: "Oke"
+        });
+      }
+    });
+  }
   function panggil(id) {
     $.ajax({
       url: "<?= base_url() ?>antrian/antrian/panggil",
       type: "POST",
       dataType: "JSON",
       data: { id },
+      beforeSend: function () {
+        Swal.fire({
+          title: 'Mengupload...',
+          html: 'Mohon Ditunggu...',
+          allowEscapeKey: false,
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+      },
       success: function (data) {
         if (data.status) {
           Swal.fire({
@@ -142,7 +334,6 @@
             allowOutsideClick: false,
           }).then((result) => {
             if (result.isConfirmed) {
-              // window.location.href = '<php echo base_url() ?>resepsionis/pendaftaran'
               get_data();
             }
           });
@@ -182,7 +373,7 @@
     const id_dokter = ambil.id_dokter;
     const nama_dokter = ambil.nama_dokter;
     $.post({
-      url: "<?= base_url() ?>antrian/antrian/selesai",
+      url: "<?= base_url() ?>antrian/antrian/konfirmasi",
       data: {
         id: id,
         kode_invoice: kode_invoice,
@@ -196,8 +387,18 @@
         nama_dokter: nama_dokter,
       },
       dataType: "JSON",
+      beforeSend: function () {
+        Swal.fire({
+          title: 'Mengupload...',
+          html: 'Mohon Ditunggu...',
+          allowEscapeKey: false,
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+      },
       success: function (data) {
-        console.log(data);
         if (data.status == true) {
           Swal.fire({
             title: "Berhasil!",
@@ -288,18 +489,19 @@
   // Fungsi select untuk mengambil data poli
   function select() {
     $.get({
-      url: "<?= base_url()?>antrian/antrian/poli",
+      url: "<?= base_url() ?>antrian/antrian/poli",
       dataType: "json",
       success: function (res) {
-        if(res != null){
-          $('#poli-select').empty().append('<option value="">Semua Poli</option>');
+        if (res != null) {
+          $('#poli-select').empty().append('<option value="-">Semua Poli</option>');
           res.data.forEach(item => {
-            $('#poli-select').append($('<option>',{
+            $('#poli-select').append($('<option>', {
               value: item.id,
               text: item.nama,
-              'data-nama' : item.nama,
-              'data-id' : item.id})) 
-        });
+              'data-nama': item.nama,
+              'data-id': item.id
+            }))
+          });
         }
       },
     })
@@ -350,9 +552,9 @@
               </button>
             </li>
             <li class="nav-item ms-auto poli-selector">
-                <select class="form-select" id="poli-select">
-                </select>
-            </li>          
+              <select class="form-select" id="poli-select">
+              </select>
+            </li>
           </ul>
           <!-- Tab Content -->
           <div class="tab-content">
@@ -403,6 +605,7 @@
                       <th>Nama Pasien</th>
                       <th>Nama Poli</th>
                       <th>Status</th>
+                      <th class="text-center">Aksi</th>
                     </tr>
                   </thead>
                   <tbody></tbody>

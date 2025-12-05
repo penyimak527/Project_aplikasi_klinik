@@ -27,10 +27,20 @@ class M_jabatan extends CI_Model
 
     public function tambah()
     {
-        $inputan = array(
-            'nama' => ucfirst($this->input->post('nama_jabatan'))
-        );
+        $nama = ucfirst($this->input->post('nama_jabatan'));
+        $cek = $this->db->get_where('kpg_jabatan', ['nama' => $nama])->row_array();
 
+        if ($cek) {
+            return [
+                'status' => false,
+                'message' => 'Nama jabatan sudah ada!'
+            ];
+        }
+
+        // Jika belum ada → lanjut insert
+        $inputan = [
+            'nama' => $nama
+        ];
         $this->db->trans_begin();
 
         $this->db->insert('kpg_jabatan', $inputan);

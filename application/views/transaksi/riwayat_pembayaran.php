@@ -5,15 +5,25 @@
         $("#jumlah_tampil").change(function () {
             get_data();
         })
+        const tanggalInput = document.getElementById('filter_tanggal');
+        const datepicker = new Datepicker(tanggalInput, {
+            format: 'dd-mm-yyyy',
+            autohide: true
+        });
+        tanggalInput.addEventListener('changeDate', function() {
+            filterTanggal();
+        });
     })
-
     function get_data() {
         let cari = $('#cari').val();
         let count_header = $(`#table-data thead tr th`).length
+        let tanggal = $('#filter_tanggal').val();
 
         $.ajax({
             url: '<?php echo base_url(); ?>transaksi/pembayaran/result_Dataa',
-            data: { cari },
+            data: { 
+            cari : cari,
+            tanggal : tanggal,},
             type: "POST",
             dataType: "json",
             beforeSend: () => {
@@ -28,6 +38,7 @@
                 $(`#table-data tbody`).html(loading);
             },
             success: function (res) {
+                console.log(res);
                 let table = "";
                 if (res.result) {
                     let i = 1;
@@ -192,7 +203,9 @@
         });
     }
 
-
+    function filterTanggal() {
+        get_data();
+    }
 </script>
 <div class="container-fluid">
     <!-- Page-Title -->
@@ -222,6 +235,14 @@
                                 <div class="input-group-text"><i class="fas fa-search"></i></div>
                                 <input type="text" class="form-control" id="cari" placeholder="Cari Invoice/Pasien/NIK" autocomplete="off">
                             </div>
+                        </div>
+                       <div class="col-sm-3">
+                            <input type="text" class="form-control" id="filter_tanggal" name="filter_tanggal" placeholder="Cari riwayat tanggal..." autocomplete="off" onchange="filterTanggal()">
+                        </div>
+                        <div class="col-sm-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-warning w-100" onclick="$('#filter_tanggal').val(''); filterTanggal();">
+                                <i class="fas fa-search me-2"></i>Reset Filter
+                            </button>
                         </div>
                     </div>
                     <div class="table-responsive">

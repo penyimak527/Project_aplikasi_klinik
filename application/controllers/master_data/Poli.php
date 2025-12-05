@@ -5,11 +5,14 @@ class Poli extends CI_Controller
     {
         parent::__construct();
         date_default_timezone_set('Asia/Jakarta');
+          if($this->session->userdata('username') == null) {
+            redirect('login/login');
+        }
         $this->load->model('master_data/m_poli', 'model');
     }
 
     public function index()
-    {
+    {        
         $data['active'] = 'Master data';
         $data['title'] = 'Poli';
         $this->load->view('templates/header', $data);

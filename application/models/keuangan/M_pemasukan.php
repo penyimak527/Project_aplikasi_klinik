@@ -39,17 +39,6 @@ class M_pemasukan extends CI_Model
       'tanggal' => $currentDate,
       'waktu' => $jam
     );
-    // $lain = $this->input->post('nama_jenis');
-    // $input_lain = ucfirst($this->input->post('lainnya'));
-    // if ($lain == 'Lain-lain') {
-    //      $input1 = array(
-    //             'nama'    => $input_lain
-    //         );
-    //           $this->db->insert('rsp_jenis_biaya', $input1);
-    //           $jenis_biaya = $this->db->insert_id();
-    //           $inputan['nama_jenis_biaya']  = $input_lain;
-    //           $inputan['id_jenis_biaya']  = $jenis_biaya;
-    // }
     $this->db->trans_begin();
     $this->db->insert('rsp_pemasukan', $inputan);
     $this->db->trans_complete();

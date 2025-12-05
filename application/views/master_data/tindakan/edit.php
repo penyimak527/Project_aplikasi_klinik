@@ -8,7 +8,9 @@
     }
   });
   function edit(e) {
+      let btn = $(e.target).closest('button');
     e.preventDefault();
+    btn.prop("disabled", true).text("Mengirim...");
     const nama = $('#nama').val();
     const harga = $('#harga').val();
     const id = $('#id_poli').val();
@@ -19,6 +21,7 @@
         title: "Oops...",
         text: "Inputan Kosong",
       });
+      btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
       return;
     }
     $.ajax({
@@ -26,6 +29,17 @@
       method: 'POST',
       data: $('#form_edit').serialize(),
       dataType: 'json',
+       beforeSend: function () {
+        Swal.fire({
+            title: 'Mengupload...',
+            html: 'Mohon Ditunggu...',
+            allowEscapeKey: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    },
       success: function (res) {
         if (res.status == true) {
           Swal.fire({
@@ -55,8 +69,9 @@
             closeOnConfirm: false,
             allowOutsideClick: false
           }).then((result) => {
+            btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             if (result.isConfirmed) {
-              location.reload()
+              console.log('Terjadi error!');
             }
           })
         }
@@ -149,10 +164,10 @@
               <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
               <!-- inputan start -->
               <div class="mb-3 row">
-                <label for="edit_contoh" class="col-sm-2 col-form-label">Nama Poli</label>
+                <label for="edit_contoh" class="col-sm-2 col-form-label">Nama Tindakan</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="nama" value="<?php echo $row['nama']; ?>" id="nama"
-                    placeholder="Input nama">
+                    placeholder="Input nama tindakan">
                 </div>
               </div>
               <div class="mb-3 row">

@@ -189,8 +189,18 @@
             status: 'Disetujui',
           },
           dataType: 'JSON',
+           beforeSend: function () {
+                Swal.fire({
+                    title: 'Mengupload...',
+                    html: 'Mohon Ditunggu...',
+                    allowEscapeKey: false,
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
           success: function (res) {
-            console.log(res);
             if (res.status) {
               Swal.fire({
                 icon: "success",
@@ -209,7 +219,6 @@
           },
           error: function (jqXHR, textStatus, errorThrown) {
             console.log(jqXHR, textStatus, errorThrown);
-            // console.log(error);
             Swal.fire("Error", "Tidak dapat mengubah status", "error");
           }
         })
@@ -257,6 +266,17 @@
           method: 'POST',
           data: { id },
           dataType: 'json',
+           beforeSend: function () {
+                Swal.fire({
+                    title: 'Mengupload...',
+                    html: 'Mohon Ditunggu...',
+                    allowEscapeKey: false,
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
           success: function (res) {
             if (res.status == true) {
               Swal.fire({

@@ -72,20 +72,28 @@ class M_transaksi extends CI_Model
     // Untuk mengambil data dari rsp_pembayaran yang column bayar tidak null / tidak kosong
     public function result_dataa()
     {
+        $timestamp = time();
         $cari = $this->input->post('cari');
+        $tanggal = $this->input->post('tanggal');
         // Pertama, dapatkan list invoice saja
         $this->db->from('rsp_pembayaran a');
         $this->db->select('a.kode_invoice, a.nama_pasien, a.tanggal');
         $this->db->join('pol_resep b', 'a.kode_invoice = b.kode_invoice');
+        // $this->db->where('a.tanggal', $tanggal);
         $this->db->group_start();
         $this->db->where("(a.bayar IS NOT NULL OR a.bayar != '')");
         $this->db->where("(a.metode_pembayaran IS NOT NULL OR a.metode_pembayaran != '')");
         $this->db->group_end();
         if ($cari != '') {
+            $this->db->group_start();
             $this->db->like('a.nama_pasien', $cari);
             $this->db->or_like('a.metode_pembayaran', $cari);
             $this->db->or_like('a.nik', $cari);
             $this->db->or_like('a.kode_invoice', $cari);
+            $this->db->group_end();
+        }
+        if ($tanggal != '') {
+            $this->db->where('a.tanggal', $tanggal);
         }
         $this->db->order_by('a.id', 'DESC');
         $invoices = $this->db->get()->result_array();
@@ -98,7 +106,6 @@ class M_transaksi extends CI_Model
                 $result[] = array_merge($invoice, $detail);
             }
         }
-
         return $result;
     }
     private function _clean_rupiah($string)

@@ -5,6 +5,9 @@ class Booking extends CI_Controller
     {
         parent::__construct();
         date_default_timezone_set('Asia/Jakarta');
+          if($this->session->userdata('username') == null) {
+            redirect('login/login');
+        }
         $this->load->model('resepsionis/m_booking', 'model');
     }
 
@@ -78,7 +81,18 @@ class Booking extends CI_Controller
     }
     public function edit()
     {
-        $response = $this->model->edit();
+            $this->form_validation->set_rules('nama_pasien', 'Nama Pasien', 'required');
+    $this->form_validation->set_rules('nik', 'NIK', 'required|numeric|min_length[16]|max_length[16]');
+      if ($this->form_validation->run() == FALSE) {
+        // Kirim error ke AJAX
+        $response = [
+            'status' => false,
+            'message'  => validation_errors()
+        ];
+    } else {
+        // Jika valid, baru simpan ke model
+        $response = $this->model->tambah();
+    }
 
         $this
             ->output

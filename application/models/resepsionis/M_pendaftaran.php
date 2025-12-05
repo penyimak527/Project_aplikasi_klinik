@@ -277,10 +277,20 @@ public function result_data(){
       'nama_pasien' => $this->input->post('nama_pasien'),
       'nik' => $this->input->post('nik'),
     );
-
+    $inputanp = array(
+     'nama_pasien' => $this->input->post('nama_pasien'),
+     'nik' => $this->input->post('nik'),
+   );
+    $ambildatr = $this->db->get_where('rsp_registrasi', ['id' => $this->input->post('id')])->row_array();
     $this->db->trans_begin();
+  if (!empty($ambildatr['id_booking']) || !empty($ambildatr['kode_booking'])) {
+    $this->db->where('id', $ambildatr['id_booking']);
+    $this->db->update('rsp_booking', $inputanp);    
+    }
     $this->db->where('id', $this->input->post('id'));
     $this->db->update('rsp_registrasi', $inputan);
+    $this->db->where('id', $this->input->post('id_pasien'));
+    $this->db->update('mst_pasien', $inputanp);
     $this->db->trans_complete();
     if ($this->db->trans_status() === FALSE) {
 			$this->db->trans_rollback();

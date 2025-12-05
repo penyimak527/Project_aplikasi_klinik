@@ -3,6 +3,9 @@ class Pembayaran extends CI_Controller{
       function __construct(){
 		parent::__construct();
     date_default_timezone_set('Asia/Jakarta');
+      if($this->session->userdata('username') == null) {
+            redirect('login/login');
+        }
 		$this->load->model('transaksi/m_transaksi','model');
   }
     public function index(){

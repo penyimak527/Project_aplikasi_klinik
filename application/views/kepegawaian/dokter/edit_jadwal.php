@@ -136,7 +136,10 @@
             placeholderChar: '_'
         });
     }
-    function edit() {
+    function edit(e) {
+        let btn = $(e.target).closest('button');
+    e.preventDefault();
+    btn.prop("disabled", true).text("Mengirim...");
         const id = $('#id').val();
         const id_pegawai = $('#id_pegawai').val();
         const nama_pegawai = $('#nama_pegawai').val();
@@ -150,6 +153,7 @@
                 title: "Oops...",
                 text: "Inputan Kosong!",
             });
+            btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             return;
         }
         $.ajax({
@@ -164,12 +168,24 @@
                 jam_selesai: jam_selesai
             },
             dataType: 'JSON',
+             beforeSend: function () {
+        Swal.fire({
+            title: 'Mengupload...',
+            html: 'Mohon Ditunggu...',
+            allowEscapeKey: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    },
             success: function (res) {
                 Swal.fire({
                     icon: res.status ? "success" : "error",
                     title: res.status ? "Berhasil" : "Gagal",
                     text: res.message
                 }).then(() => {
+                    btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
                     window.location.href = '<?= base_url('kepegawaian/dokter/kalender/' . $dokter['id']) ?>';
                 });
             },

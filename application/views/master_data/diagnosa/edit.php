@@ -3,7 +3,9 @@
     poli()
   });
   function edit(e) {
+    let btn = $(e.target).closest('button');
     e.preventDefault();
+    btn.prop("disabled", true).text("Mengirim...");
     const nama = $('#nama_diag').val();
     const id = $('#id_poli').val();
     const nama_p = $('#nama_poli').val();
@@ -13,6 +15,7 @@
         title: "Oops...",
         text: "Inputan Kosong",
       });
+      btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
       return;
     }
 
@@ -50,8 +53,9 @@
             closeOnConfirm: false,
             allowOutsideClick: false
           }).then((result) => {
+            btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             if (result.isConfirmed) {
-              location.reload()
+              console.log('Terjadi error!');
             }
           })
         }

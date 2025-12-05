@@ -114,12 +114,19 @@ class M_booking extends CI_Model
         $inputan = array(
             'id_poli' => $this->input->post('id_poli'),
             'nama_poli' => $this->input->post('nama_poli'),
+            'nama_pasien' => $this->input->post('nama_pasien'),
+            'nik' => $this->input->post('nik'),
             'id_dokter' => $this->input->post('id_dokter'),
             'nama_dokter' => $this->input->post('nama_dokter'),
             'tanggal' => $this->input->post('tanggal'),
             'waktu' => $this->input->post('waktu'),
         );
         $this->db->trans_begin();
+        $this->db->where('id', $this->input->post('id_pasien'));
+        $this->db->update('mst_pasien', [
+            'nama_pasien' => $this->input->post('nama_pasien'),
+            'nik' => $this->input->post('nik'),
+        ]);
         $this->db->where('id', $this->input->post('id'));
         $this->db->update('rsp_booking', $inputan);
         $this->db->trans_complete();

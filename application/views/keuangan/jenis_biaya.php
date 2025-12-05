@@ -101,6 +101,17 @@
           method: 'POST',
           data: { id },
           dataType: 'json',
+           beforeSend: function () {
+                Swal.fire({
+                    title: 'Mengupload...',
+                    html: 'Mohon Ditunggu...',
+                    allowEscapeKey: false,
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            },
           success: function (res) {
             if (res.status == true) {
               Swal.fire({
@@ -160,7 +171,7 @@
     <div class="col-lg-12">
       <div class="card">
         <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center pt-3 pb-3">
-          <h4 class="card-title">Data <?php echo $title; ?></h4>
+          <h4 class="card-title"><?php echo $title; ?></h4>
           <a href="<?php echo base_url(); ?>keuangan/jenis_biaya/view_tambah"><button type="button"
               class="btn btn-success"><i class="fas fa-plus"></i> Tambah</button></a>
         </div><!--end card-header-->

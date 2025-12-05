@@ -1,6 +1,8 @@
 <script type="text/javascript">
   function tambah(e) {
-    e.preventDefault()
+    let btn = $(e.target).closest('button');
+    e.preventDefault();
+    btn.prop("disabled", true).text("Mengirim...");
     const biaya = $('#jenis_biaya').val();
     if (biaya == '') {
       Swal.fire({
@@ -8,6 +10,7 @@
         title: "Oops...",
         text: "Inputan Nama Biaya Kosong",
       });
+      btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
       return;
     };
     $.ajax({
@@ -15,6 +18,17 @@
       method: 'POST',
       data: $('#form_tambah').serialize(),
       dataType: 'json',
+       beforeSend: function () {
+        Swal.fire({
+            title: 'Mengupload...',
+            html: 'Mohon Ditunggu...',
+            allowEscapeKey: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    },
       success: function (res) {
         if (res.status == true) {
           Swal.fire({
@@ -44,8 +58,9 @@
             closeOnConfirm: false,
             allowOutsideClick: false
           }).then((result) => {
+            btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             if (result.isConfirmed) {
-              location.reload()
+              console.log('Terjadi error!');
             }
           })
         }

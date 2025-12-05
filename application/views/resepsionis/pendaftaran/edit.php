@@ -5,24 +5,52 @@
 			return dokter(idPoli); // tunggu dokter selesai dimuat
 		})
 	})
-	function edit() {
-		const dokter = $('#id_dokter').val();
-		const poli = $('#id_poli').val();
-		if (dokter == '' || poli == '') {
+	// untuk validasi form pada bagian required
+	function validateForm(formSelector) {
+		let isValid = true;
+		$(formSelector + ' [required]').removeClass('is-invalid');
+		$(formSelector + ' [required]').each(function () {
+			if (!$(this).val() || $(this).val().trim() === '') {
+				isValid = false;
+				$(this).addClass('is-invalid');
+			}
+		});
+		if (!isValid) {
 			Swal.fire({
-				icon: "error",
-				title: "Oops...",
-				text: "Inputan Kosong",
+				title: 'Gagal!',
+				text: 'Harap isi semua kolom yang wajib diisi.',
+				icon: 'error',
+				confirmButtonColor: '#3085d6',
+				confirmButtonText: 'Oke'
 			});
-			return;
 		}
+		return isValid;
+	}
+	function edit(e) {
+		let btn = $(e.target).closest('button');
+		e.preventDefault();
+		btn.prop("disabled", true).text("Mengirim...");
+		if (!validateForm('#form_edit')) {
+			btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
+			return;
+		};
 		$.ajax({
 			url: '<?php echo base_url('resepsionis/pendaftaran/edit') ?>',
 			method: 'POST',
 			data: $('#form_edit').serialize(),
 			dataType: 'json',
+			beforeSend: function () {
+				Swal.fire({
+					title: 'Mengupload...',
+					html: 'Mohon Ditunggu...',
+					allowEscapeKey: false,
+					allowOutsideClick: false,
+					didOpen: () => {
+						Swal.showLoading();
+					}
+				});
+			},
 			success: function (res, status) {
-				console.log(res, status);
 				if (res.status == true) {
 					Swal.fire({
 						title: 'Berhasil!',
@@ -42,7 +70,7 @@
 				} else {
 					Swal.fire({
 						title: 'Gagal!',
-						text: res.message,
+						html: res.message,
 						icon: "error",
 						showCancelButton: false,
 						showConfirmButton: true,
@@ -51,8 +79,9 @@
 						closeOnConfirm: false,
 						allowOutsideClick: false
 					}).then((result) => {
+						btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
 						if (result.isConfirmed) {
-							location.reload()
+							console.log('Terjadi error!');
 						}
 					})
 				}
@@ -184,17 +213,19 @@
 								<label for="tambah_contoh" class="col-sm-2 col-form-label">Nama Pasien</label>
 								<div class="col-sm-10">
 									<input type="hidden" class="form-control" name="id_pasien" id="id_pasien"
-										value="<?php echo $row['id_pasien'] ?>" placeholder="Input id pasien" readonly />
-									<input type="text" class="form-control" name="nama_pasien" id="nama_pasien"
-										value="<?php echo $row['nama_pasien'] ?>" placeholder="Input nama pasien"
+										value="<?php echo $row['id_pasien'] ?>" placeholder="Input id pasien"
 										readonly />
+									<input type="text" class="form-control" name="nama_pasien" id="nama_pasien"
+										value="<?php echo $row['nama_pasien'] ?>" placeholder="Nama Pasien" />
 								</div>
 							</div>
 							<div class="mb-3 row">
 								<label for="tambah_contoh" class="col-sm-2 col-form-label">NIK</label>
 								<div class="col-sm-10">
-									<input type="text" class="form-control" name="nik" id="nik"
-										value="<?php echo $row['nik'] ?>" placeholder="NIK" readonly />
+									<input type="text" class="form-control" name="nik" id="nik" minlength="16"
+										maxlength="16" inputmode="numeric"
+										oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+										value="<?php echo $row['nik'] ?>" placeholder="NIK" />
 								</div>
 							</div>
 							<div class="mb-3 row">

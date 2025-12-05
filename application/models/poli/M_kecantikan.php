@@ -28,11 +28,17 @@ class M_kecantikan extends CI_Model
     public function row_datakode($kode_invoice)
     {
         // untuk kpg_dokter saya ambil untuk id_poli
-        $this->db->select('a.*, b.id_poli, b.nama_poli, c.no_rm, c.jenis_kelamin, c.tanggal_lahir, c.no_telp, c.alamat');
+        $this->db->select('a.*, b.id_poli, b.nama_poli, c.no_rm, c.jenis_kelamin, c.tanggal_lahir, c.no_telp, c.alamat, d.status AS status_foto, d.foto');
         $this->db->from('pol_kecantikan a');
-        // $this->db->join('kpg_dokter b', 'b.id_pegawai = a.id_dokter');
         $this->db->join('kpg_dokter b', 'b.id_pegawai = a.id_dokter');
         $this->db->join('mst_pasien c', 'c.id = a.id_pasien');
+        // JOIN berdasarkan data JOIN
+        $this->db->join(
+            'pol_kecantikan_detail d',
+            "d.id_pasien = a.id_pasien",
+            'left'
+        );
+
         $this->db->where('a.kode_invoice', $kode_invoice);
         return $this->db->get()->row_array();
     }
@@ -54,13 +60,14 @@ class M_kecantikan extends CI_Model
             $this->db->update('pol_kecantikan', $inputan);
             $id_pol_kecantikan = $this->input->post('id');
             // 2. Proses diagnosa
+            $data_poli = $this->db->get_where('pol_kecantikan', ['id' => $id_pol_kecantikan])->row_array();
             $this->_process_diagnosa($id_pol_kecantikan);
 
             // 3. Proses tindakan
             $this->_process_tindakan($id_pol_kecantikan);
 
             // 4. Proses upload foto
-            $upload_result = $this->_process_upload($id_pol_kecantikan);
+            $upload_result = $this->_process_upload($id_pol_kecantikan, $data_poli);
             if (!$upload_result['status'] && $upload_result['message'] != 'Tidak ada file yang diupload') {
                 throw new Exception($upload_result['message']);
             }
@@ -192,7 +199,7 @@ class M_kecantikan extends CI_Model
         foreach ($tindakan_existing as $index => $tindakan) {
             if (!empty(trim($tindakan))) {
                 $tindakan_id = $id_tindakan[$index] ?? null;
-                $harga = $harga_exiting_clean[$index] ?? 0;
+                // $harga = $harga_exiting_clean[$index] ?? 0;
 
                 if ($tindakan_id) {
                     // Ambil data tindakan dari database
@@ -203,7 +210,7 @@ class M_kecantikan extends CI_Model
                             'id_rm_kecantikan' => $id_pol_kecantikan,
                             'id_tindakan' => $tindakan_id,
                             'tindakan' => $tindakan_data->nama,
-                            'harga' => $this->_clean_rupiah($tindakan_data->harga)
+                            'harga' =>$tindakan_data->harga
                         ]);
                     }
                 }
@@ -211,8 +218,9 @@ class M_kecantikan extends CI_Model
         }
     }
 
-    private function _process_upload($id_pol_kecantikan)
+    private function _process_upload($id_pol_kecantikan, $data_poli)
     {
+        $id_pol_kecantikanpasien = $data_poli['id_pasien'];
         if (empty($_FILES['upload_foto']['name'])) {
             return ['status' => true, 'message' => 'Tidak ada file yang diupload'];
         }
@@ -220,7 +228,7 @@ class M_kecantikan extends CI_Model
         $status_fo = $this->input->post('status_foto');
         $config['upload_path'] = './upload/';
         $config['allowed_types'] = 'jpg|png|jpeg';
-        $config['max_size'] = 50048; // 50MB
+        $config['max_size'] = 5048; // 5MB
         $ext = pathinfo($_FILES['upload_foto']['name'], PATHINFO_EXTENSION);
         $config['file_name'] = $kode_invo . '(' . $status_fo . ')' . '.' . $ext;
 
@@ -235,7 +243,8 @@ class M_kecantikan extends CI_Model
         $this->db->insert('pol_kecantikan_detail', [
             'id_pol_kecantikan' => $id_pol_kecantikan,
             'status' => $this->input->post('status_foto'),
-            'foto' => $data['file_name']
+            'foto' => $data['file_name'],
+            'id_pasien' => $id_pol_kecantikanpasien
         ]);
 
         return ['status' => true, 'message' => 'File berhasil diupload'];
@@ -246,6 +255,7 @@ class M_kecantikan extends CI_Model
         $timestamp = time();
         $jam = date('H:i:s');
         $currentDate = gmdate('d-m-Y', $timestamp);
+        $tanggalHariIni = gmdate('dmY', time());
         $this->db->select('kode_resep');
         $this->db->from('pol_resep');
         $this->db->order_by('id', 'DESC');
@@ -258,9 +268,9 @@ class M_kecantikan extends CI_Model
             $next_numrsp = $last_numrsp + 1;
             $rsp_new = 'RSP' . '-' . str_pad($next_numrsp, 3, '0', STR_PAD_LEFT);
         } else {
-            $rsp_new = 'RSP' . '-' . '001';
+            $rsp_new = 'RSP' . $tanggalHariIni . '-' . '001';
         }
-      
+
         $subtotal_hl = $this->input->post('subtotal_hl_all') ?: []; // Ensure it's at least an empty array
         $total = array_sum(array_map(function ($val) {
             return (float) str_replace(['Rp', '.', ','], '', $val);
@@ -473,32 +483,111 @@ class M_kecantikan extends CI_Model
         $this->db->from('apt_satuan_barang');
         return $this->db->get()->result();
     }
-
-    // mengambil data obat
     public function obat()
-    {
-        $cari = $this->input->post('carit');
-        $this->db->select('a.*, b.nama_satuan, c.nama_barang, c.id_jenis_barang, d.harga_jual, d.harga_awal, d.laba');
-        $this->db->from('apt_barang_detail a');
-        $this->db->join('apt_satuan_barang b', 'b.id = a.id_satuan_barang');
-        $this->db->join('apt_barang c', 'c.id = a.id_barang');
-        $this->db->join('apt_stok d', 'd.id_barang_detail = a.id');
-        $this->db->where('d.stok >', 0);
-        $this->db->where('d.harga_awal >', 0);
-        $this->db->where('d.harga_jual >', 0);
-        $this->db->where('d.laba >', 0);
-        $this->db->where('d.kadaluarsa >', 0);
-        if ($cari != '') {
-            $this->db->group_start()
-                ->like('a.nama_barang', $cari)
-                ->or_like('a.satuan_barang', $cari)
-                ->group_end();
-        }
-
-        $this->db->order_by('a.id', 'ASC');
-        return $this->db->get()->result_array();
-        return $this->db->get()->result();
+{
+    $cari = $this->input->post('carit');
+    
+    $this->db->select('
+        ab.id as id_barang,
+        ab.nama_barang as nama_barang_master,
+        ab.id_jenis_barang,
+        
+        abd.id as id_barang_detail,
+        abd.kode_barang,
+        abd.nama_barang,
+        abd.id_satuan_barang,
+        abd.satuan_barang,
+        abd.isi_satuan_turunan,
+        abd.urutan_satuan,
+        
+        asb.nama_satuan,
+        
+        ast.harga_awal,
+        ast.harga_jual,
+        ast.laba,
+        ast.stok
+    ');
+    $this->db->from('apt_stok ast');
+    $this->db->join('apt_barang_detail abd', 'abd.id = ast.id_barang_detail');
+    $this->db->join('apt_barang ab', 'ab.id = abd.id_barang');
+    // $this->db->join('apt_jenis_barang ajb', 'ajb.id = ab.id_jenis_barang', 'left');
+    $this->db->join('apt_satuan_barang asb', 'asb.id = abd.id_satuan_barang');
+    $this->db->where('ast.stok >' , 0);
+    // SUBQUERY: Ambil hanya satuan dengan urutan TERTINGGI per barang (satuan terbesar)
+    $this->db->where('abd.urutan_satuan = (
+        SELECT MIN(urutan_satuan) 
+        FROM apt_barang_detail 
+        WHERE id_barang = ab.id 
+        AND urutan_satuan IS NOT NULL
+    )');
+    
+    if (!empty($cari)) {
+        $this->db->group_start();
+        $this->db->like('ab.nama_barang', $cari);
+        $this->db->or_like('abd.nama_barang', $cari);
+        $this->db->or_like('abd.kode_barang', $cari);
+        $this->db->or_like('asb.nama_satuan', $cari);
+        $this->db->group_end();
     }
+    
+    $this->db->order_by('ab.nama_barang', 'ASC');
+    
+    return $this->db->get()->result();
+}
+ public function get_all_satuan_by_barang($id_barang)
+{
+    $this->db->select('
+        abd.id as id_barang_detail,
+        abd.id_barang,
+        abd.kode_barang,
+        abd.nama_barang,
+        abd.id_satuan_barang,
+        abd.satuan_barang,
+        abd.isi_satuan_turunan,
+        abd.urutan_satuan,
+        
+        asb.nama_satuan,
+        
+        ast.harga_awal,
+        ast.harga_jual,
+        ast.laba,
+        ast.stok
+    ');
+    $this->db->from('apt_barang_detail abd');
+    $this->db->join('apt_satuan_barang asb', 'asb.id = abd.id_satuan_barang');
+    $this->db->join('apt_stok ast', 'ast.id_barang_detail = abd.id', 'left');
+    $this->db->where('abd.id_barang', $id_barang);
+    $this->db->order_by('abd.urutan_satuan', 'DESC'); // Urut dari terbesar ke terkecil
+    
+    return $this->db->get()->result_array();
+}
+    // Method untuk mengambil data satuan tertentu berdasarkan id_barang_detail
+    public function get_satuan_by_id($id_barang_detail)
+    {
+        $this->db->select('
+            abd.id as id_barang_detail,
+            abd.id_barang,
+            abd.kode_barang,
+            abd.nama_barang,
+            abd.id_satuan_barang,
+            abd.satuan_barang,
+            abd.isi_satuan_turunan,
+            abd.urutan_satuan,
+            
+            asb.nama_satuan,
+            
+            ast.harga_awal,
+            ast.harga_jual,
+            ast.laba
+        ');
+        $this->db->from('apt_barang_detail abd');
+        $this->db->join('apt_satuan_barang asb', 'asb.id = abd.id_satuan_barang');
+        $this->db->join('apt_stok ast', 'ast.id_barang_detail = abd.id', 'left');
+        $this->db->where('abd.id', $id_barang_detail);
+        
+        return $this->db->get()->row_array();
+    }
+
     public function racikan()
     {
         $this->db->select('*');

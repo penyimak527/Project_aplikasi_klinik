@@ -5,11 +5,15 @@ class Kecantikan extends CI_Controller
     {
         parent::__construct();
         date_default_timezone_set('Asia/Jakarta');
+          if($this->session->userdata('username') == null) {
+            redirect('login/login');
+        }
         $this->load->model('poli/m_kecantikan', 'model');
     }
 
     public function index()
     {
+
         $data['active'] = 'Poli';
         $data['title'] = 'Kecantikan';
 
@@ -20,6 +24,7 @@ class Kecantikan extends CI_Controller
 
     public function view_proses($kode_invoice)
     {
+
         $data['row'] = $this->model->row_datakode($kode_invoice);
         $data['racikan'] = $this->model->racikan();
         $data['active'] = 'Poli';
@@ -81,14 +86,6 @@ class Kecantikan extends CI_Controller
             'data' => $data
         ]);
     }
-    public function obat()
-    {
-        $data = $this->model->obat();
-        echo json_encode([
-            'status' => true,
-            'data' => $data
-        ]);
-    }
     public function j_satuan()
     {
         $data = $this->model->satuan_b();
@@ -97,6 +94,50 @@ class Kecantikan extends CI_Controller
             'data' => $data
         ]);
     }
+    public function obat()
+    {
+        $data = $this->model->obat();
+        echo json_encode([
+            'status' => true,
+            'data' => $data
+        ]);
+    }
+ public function get_satuan_by_barang($id_barang)
+    {
+        $data = $this->model->get_all_satuan_by_barang($id_barang);
+        
+        if ($data) {
+            echo json_encode([
+                'status' => true,
+                'data' => $data
+            ]);
+        } else {
+            echo json_encode([
+                'status' => false,
+                'data' => []
+            ]);
+        }
+    }
 
+    public function get_satuan_detail($id_barang_detail)
+    {
+        $data = $this->model->get_satuan_by_id($id_barang_detail);
+        
+        if ($data) {
+            echo json_encode([
+                'status' => true,
+                'data' => $data
+            ]);
+        } else {
+            echo json_encode([
+                'status' => false,
+                'data' => []
+            ]);
+        }
+    }
 }
+
 ?>
+
+
+

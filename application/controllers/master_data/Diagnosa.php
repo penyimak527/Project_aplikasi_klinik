@@ -4,6 +4,9 @@ class Diagnosa extends CI_Controller
     function __construct()
     {
         parent::__construct();
+          if($this->session->userdata('username') == null) {
+            redirect('login/login');
+        }
         $this->load->model('master_data/m_diagnosa', 'model');
     }
 
