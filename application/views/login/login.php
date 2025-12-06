@@ -94,17 +94,6 @@
                 type: 'POST',
                 dataType: 'JSON',
                 data: $(this).serialize(),
-                beforeSend: function () {
-                    Swal.fire({
-                        title: 'Mengupload...',
-                        html: 'Mohon Ditunggu...',
-                        allowEscapeKey: false,
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-                },
                 success: function (res) {
                     if (res.status == true) {
                         if (res.data.status == "Aktif") {

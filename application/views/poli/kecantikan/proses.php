@@ -302,7 +302,7 @@
                 $('#table-data2 tbody').html(loading);
             },
             success: function (res) {
-                console.log('Data obat dengan satuan terbesar:', res);
+                // console.log('Data obat dengan satuan terbesar:', res);
 
                 // FILTER BARANG AGAR TIDAK MUNCUL LAGI
                 let filteredb = res.data.filter(item =>
@@ -351,8 +351,8 @@
 
         if (existingRacikanIds.includes(itemId)) {
             Swal.fire({
-                icon: "error",
-                title: "Gagal!",
+                icon: "warning",
+                title: "Peringatan!",
                 text: "Obat ini sudah ada dalam racikan ini!"
             });
             return;
@@ -373,8 +373,8 @@
 
     if (existingObatIds.includes(itemId)) {
         Swal.fire({
-            icon: "error",
-            title: "Gagal!",
+            icon: "warning",
+            title: "Peringatan!",
             text: "Obat ini sudah ada dalam daftar obat!"
         });
         return;
@@ -527,9 +527,9 @@ function normalize(item) {
 
         if (duplikat) {
             Swal.fire({
-                title: "Gagal!",
+                title: "Peringatan!",
                 text: `Tindakan '${item.nama_tindakan}' sudah ditambahkan!`,
-                icon: "error",
+                icon: "warning",
                 confirmButtonColor: "#35baf5",
             });
             return;
@@ -648,9 +648,9 @@ function normalize(item) {
 
         if (duplikat) {
             Swal.fire({
-                title: "Gagal!",
+                title: "Peringatan!",
                 text: `Diagnosa '${item.nama_diagnosa}' sudah ditambahkan!`,
-                icon: "error",
+                icon: "warning",
                 confirmButtonColor: "#35baf5",
             });
             return;

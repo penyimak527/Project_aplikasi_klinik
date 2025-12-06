@@ -109,11 +109,7 @@
                                 <td>${item.nama_pasien}</td>
                                 <td>${item.nama_poli}</td>
                                 <td>${statusbd}</td>
-                                <td><button id="btnView_${item.kode_invoice}" 
-        class="btn btn-info btn-sm"
-        onclick="v_konfirm('${item.kode_invoice}')">
-    <i class="fas fa-eye"></i> View
-</button></td>
+                                <td class="text-center"><button id="btnView_${item.kode_invoice}" class="btn btn-sm" onclick="v_konfirm('${item.kode_invoice}')"><i class="fas fa-briefcase-medical"></i></button></td>
                             </tr>
                         `;
                cekButtonKecantikan(item.kode_invoice);
@@ -221,14 +217,17 @@
           // Lengkap → tombol aktif
           btn.prop("disabled", false)
             .removeClass("btn-secondary")
-            .addClass("btn-info")
-            .html('<i class="fas fa-eye"></i> View');
+            .addClass("btn-warning")
+            .html('<i class="fas fa-briefcase-medical"></i>');
           console.log('Button enabled - Data Belum Lengkap');
         }
 
         else {
-          btn.hide();
-          console.log('Hiding button - Data Belum Lengkap');
+          btn.prop("disabled", true)
+            .addClass("btn-secondary")
+            .removeClass("btn-info")
+            .html('<i class="fas fa-check"></i>');
+          console.log('Hiding button - Data Sudah Lengkap');
           return;
         }
       },
