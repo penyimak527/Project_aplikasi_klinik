@@ -216,7 +216,7 @@ if (!validateForm('#form_edit')) {
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Umur</label>
                 <div class="col-sm-10">
-                  <input type="number" class="form-control" name="umur" id="umur" value="<?php echo $row['umur'] ?>"
+                  <input type="text" class="form-control" name="umur" id="umur" value="<?php echo $row['umur'] ?>"
                     placeholder="Input umur" readonly>
                 </div>
               </div>

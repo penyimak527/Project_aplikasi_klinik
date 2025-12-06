@@ -542,7 +542,7 @@
             <li class="nav-item" role="presentation">
               <button class="nav-link active" id="antrian-tab" data-bs-toggle="tab" data-bs-target="#tab-antrian"
                 type="button" role="tab">
-                Dipanggil
+                Menunggu
               </button>
             </li>
             <li class="nav-item" role="presentation">

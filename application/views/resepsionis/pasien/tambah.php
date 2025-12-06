@@ -170,7 +170,7 @@ if (!validateForm('#form_tambah')) {
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Umur</label>
                 <div class="col-sm-10">
-                  <input type="number" class="form-control" name="umur" id="umur" placeholder="Umur" readonly>
+                  <input type="text" class="form-control" name="umur" id="umur" placeholder="Umur" readonly>
                 </div>
               </div>
               <div class="mb-3 row">

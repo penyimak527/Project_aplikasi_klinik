@@ -66,6 +66,27 @@
         let btn = $(e.target).closest('button');
         e.preventDefault();
         btn.prop("disabled", true).text("Mengirim...");
+        const total_invoicei = $('#total_invoice').val();
+        const bayari = $('#bayar').val();
+        if (total_invoicei > bayari  ) {
+               Swal.fire({
+                        title: 'Gagal!',
+                        text: 'Pembayaran Kurang Dari Total Tagihan!',
+                        icon: "error",
+                        showCancelButton: false,
+                        showConfirmButton: true,
+                        confirmButtonColor: "#35baf5",
+                        confirmButtonText: "Oke",
+                        closeOnConfirm: false,
+                        allowOutsideClick: false
+                    }).then((result) => {
+                        btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
+                        if (result.isConfirmed) {
+                            console.log('Pembayaran Kurang!');
+                        }
+                    });
+            return;
+        }
         const formData = new FormData(document.getElementById('form_pembayaran'));
         // Convert nilai-nilai yang perlu diubah dari Rupiah ke angka
         const dataToSend = {
@@ -116,6 +137,7 @@
                         closeOnConfirm: false,
                         allowOutsideClick: false
                     }).then(() => {
+                        btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan')
                         pindahhalaman(res.kode_invoice);
                     });
                 } else {
