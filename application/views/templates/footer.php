@@ -33,6 +33,7 @@
 <script src="<?php echo base_url(); ?>assets/libs/vanillajs-datepicker/js/datepicker-full.min.js"></script>
 <script src="https://unpkg.com/imask"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="<?php echo base_url(); ?>assets/libs/mobius1-selectr/selectr.min.js"></script>
 <script src="<?= base_url('assets') ?>/libs/dropify/dist/js/dropify.js"></script>
 </body>

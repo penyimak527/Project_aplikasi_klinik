@@ -144,8 +144,6 @@
   function pasien() {
     let count_header = $(`#table-data thead tr th`).length;
     const nama_p = $('#nama_p').val();
-    console.log(count_header);
-    
     $.ajax({
       url: '<?= base_url("resepsionis/booking/pasien") ?>',
       data: { cari: nama_p },
@@ -273,6 +271,7 @@
       dataType: 'JSON',
       success: function (data) {
         if (data != null) {
+            $('#id_poli').append('<option value="">Pilih Poli..</option>');
           data.forEach(item => {
             $('#id_poli').append($('<option>', {
               value: item.id,
@@ -298,6 +297,10 @@
     // Validasi: pastikan hari dan waktu sudah dipilih
     if (!hari || !waktu) {
       $('#id_dokter').empty().append('<option value="">Pilih tanggal dan waktu terlebih dahulu</option>').prop('disabled', true);
+      return;
+    }
+    if (!idPoli) {
+      $('#id_dokter').empty().append('<option value="">Pilih poli terlebih dahulu</option>').prop('disabled', true);
       return;
     }
     // console.log(idPoli, hari, waktu);   masih terjadi error
@@ -493,7 +496,6 @@
                     <label for="tambah_contoh" class="col-sm-2 col-form-label">Nama Poli</label>
                     <div class="col-sm-10">
                       <select name="id_poli" id="id_poli" class="form-select" required>
-                        <option value="">Pilih Poli..</option>
                       </select>
                       <input type="hidden" class="form-control" name="nama_poli" id="nama_poli"
                         placeholder="Input nama poli" readonly>

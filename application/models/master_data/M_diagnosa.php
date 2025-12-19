@@ -125,7 +125,28 @@ class M_diagnosa extends CI_Model
         $this->db->select('*');
         $this->db->from('mst_poli');
         return $this->db->get()->result();
-        ['status' => false, 'msg' => 'data kategori ada'];
+        // ['status' => false, 'msg' => 'data kategori ada'];
+    }
+
+    public function cek_duplikat($nama_diag)
+    {
+        $this->db->where('nama_diagnosa', $nama_diag);
+        $query = $this->db->get('mst_diagnosa');
+        if ($query->num_rows() > 0) {
+            return TRUE;
+        }
+        return FALSE;
+    }
+
+     public function insert_master_data($data)
+    {
+        $nama_diag = $data['nama_diagnosa'];
+        if ($this->cek_duplikat($nama_diag)) {
+            return false;
+        } else {
+            $this->db->insert('mst_diagnosa', $data);
+        };
+        return $this->db->insert_id();
     }
 }
 ?>

@@ -21,6 +21,9 @@ class M_hak_akses extends CI_Model{
     {
         return $this->db->get('adm_grup_hak_akses')->result();
     }
+    public function get_grup_hak_akses_byid($id_grup_hak){
+        return $this->db->get_where('adm_grup_hak_akses', ['id' => $id_grup_hak])->row();
+    }
 
     public function insert_hak_akses($data)
     {

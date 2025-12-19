@@ -37,10 +37,13 @@ class Hak_akses extends CI_Controller{
     }
      public function tambah_aksi()
     {
+        $id_grup_hak = $this->input->post('id_grup_hak_akses');
+        $hak_grup = $this->m_hak_akses->get_grup_hak_akses_byid($id_grup_hak);
         $data = [
             'nama_hak_akses' => $this->input->post('nama_hak_akses'),
             'link' => $this->input->post('link'),
-            'id_grup_hak_akses' => $this->input->post('id_grup_hak_akses')
+            'id_grup_hak_akses' => $this->input->post('id_grup_hak_akses'),
+            'nama_grup_hak_akses' => $hak_grup->nama_grup_hak_akses
         ];
         $simpan = $this->m_hak_akses->insert_hak_akses($data);
         header('Content-Type: application/json');

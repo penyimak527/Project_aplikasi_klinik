@@ -88,8 +88,6 @@ setInterval(() => {
 		},
 
 		success: function (res) {
-			console.log(res);
-
 			if (!res.result || res.data.length === 0) {
 				panggil(null);
 				htmltable([]);

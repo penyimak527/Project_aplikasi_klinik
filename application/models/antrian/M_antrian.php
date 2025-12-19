@@ -69,10 +69,6 @@ class M_antrian extends CI_Model
     {
         // Ambil kode_invoice dari POST data
         $kode_invoice = $this->input->post('kode_invoice');
-
-        // Debug: cek apakah data sampai
-        log_message('debug', 'Kode invoice received: ' . $kode_invoice);
-
         if (!$kode_invoice) {
             $response = array(
                 'status' => 'error',
@@ -80,13 +76,25 @@ class M_antrian extends CI_Model
             );
             return $response;
         }
+        $poli_id = $this->input->post('id_poli');
 
-        // Cek pol_kecantikan berdasarkan kode_invoice
-        $pol = $this->db->get_where('pol_kecantikan', [
+        // ganti dengan kode poli saja
+        $mapPoli = [
+            16 => 'pol_kecantikan',
+            15 => 'pol_gigi',
+            14 => 'pol_umum',
+            27 => 'pol_anak'
+        ];
+        if (!isset($mapPoli[$poli_id])) {
+            return ['status' => 'poli_tidak_valid'];
+        }
+        $table = $mapPoli[$poli_id];
+
+        $cek_pol = $this->db->get_where($table, [
             'kode_invoice' => $kode_invoice
         ])->row_array();
 
-        if (!$pol) {
+        if (!$cek_pol) {
             $response = array(
                 'status' => 'tidak_ada_pol',
                 'tindakan' => 0,
@@ -95,17 +103,17 @@ class M_antrian extends CI_Model
             return $response;
         }
 
-        $id_pol = $pol['id'];
+        $id_pol = $cek_pol['id'];
 
-        // Cek tindakan
-        $tindakan = $this->db->get_where('pol_kecantikan_tindakan', [
-            'id_rm_kecantikan' => $id_pol
-        ])->num_rows();
+        // cek tindakan
+        $tindakan = $this->db
+            ->get_where("{$table}_tindakan", ["id_{$table}" => $id_pol])
+            ->num_rows();
+        // cek diagnosa
+        $diagnosa = $this->db
+            ->get_where("{$table}_diagnosa", ["id_{$table}" => $id_pol])
+            ->num_rows();
 
-        // Cek diagnosa
-        $diagnosa = $this->db->get_where('pol_kecantikan_diagnosa', [
-            'id_pol_kecantikan' => $id_pol
-        ])->num_rows();
         if (!$tindakan || !$diagnosa) {
             $response = array(
                 'status' => 'data_belum_lengkap',
@@ -126,26 +134,35 @@ class M_antrian extends CI_Model
     public function cek_konfirmasi()
     {
         $kode_invoice = $this->input->post('kode_invoice');
-        // Cek data di pol_kecantikan
-        $cek_pol = $this->db->get_where('pol_kecantikan', ['kode_invoice' => $kode_invoice])->row_array();
+        $poli_id = $this->input->post('id_poli');
 
-        if (!$cek_pol) {
-            // Pol kecantikan belum dibuat → belum pernah diperiksa
-            $response = array('status' => 'belum_pol');
-            return $response;
+        // ganti dengan kode poli saja
+        $mapPoli = [
+            16 => 'pol_kecantikan',
+            15 => 'pol_gigi',
+            14 => 'pol_umum',
+            27 => 'pol_anak'
+        ];
+        if (!isset($mapPoli[$poli_id])) {
+            return ['status' => 'poli_tidak_valid'];
         }
+        $table = $mapPoli[$poli_id];
+
+        $cek_pol = $this->db->get_where($table, [
+            'kode_invoice' => $kode_invoice
+        ])->row_array();
 
         $id_pol = $cek_pol['id']; // id_pol_kecantikan
 
-        // Cek tindakan
-        $cek_tindakan = $this->db->get_where('pol_kecantikan_tindakan', [
-            'id_rm_kecantikan' => $id_pol
-        ])->num_rows();
+      // cek tindakan
+        $cek_tindakan = $this->db
+            ->get_where("{$table}_tindakan", ["id_{$table}" => $id_pol])
+            ->num_rows();
+        // cek diagnosa
+        $cek_diagnosa = $this->db
+            ->get_where("{$table}_diagnosa", ["id_{$table}" => $id_pol])
+            ->num_rows();
 
-        // Cek diagnosa
-        $cek_diagnosa = $this->db->get_where('pol_kecantikan_diagnosa', [
-            'id_pol_kecantikan' => $id_pol
-        ])->num_rows();
         if (!$cek_tindakan || !$cek_diagnosa) {
             $response = array(
                 'status' => 'data_belum_lengkap',
@@ -157,7 +174,9 @@ class M_antrian extends CI_Model
         $response = array(
             'status' => 'ada',
             'tindakan' => $cek_tindakan,
-            'diagnosa' => $cek_diagnosa
+            'diagnosa' => $cek_diagnosa,
+            'id_polis'  => $poli_id,
+            'id_poli_datas' => $id_pol 
         );
         return $response;
     }
@@ -320,11 +339,58 @@ class M_antrian extends CI_Model
             return $response;
         }
     }
-    public function poli()
+    public function selectp()
     {
-        $this->db->select("*");
-        $this->db->from('mst_poli');
-        return $this->db->get()->result();
+        $id_level = $this->input->post('id_level');
+        $this->db->select('id, id_level, id_pegawai, nama_level, nama_pegawai, status, username');
+        $this->db->from('adm_user');
+        $this->db->where('id_level', $id_level);
+        $query = $this->db->get()->row();
+        if ($query->id_level) {
+            $id_pegawai = $query->id_pegawai;
+            $poli = $this->__poli($id_pegawai);
+        }
+        $response = array(
+            'status' => true,
+            'message' => "Pengecekan Poli",
+            'poli' => $poli,
+            'user' => $query
+        );
+
+        return $response;
+    }
+    private function __poli($id_pegawai)
+    {
+        if ($id_pegawai) {
+            $dokter = $this->db->get_where('kpg_dokter', ['id_pegawai' => $id_pegawai])->row();
+            if ($dokter) {
+                if ($dokter->id_pegawai === $id_pegawai) {
+                    $this->db->select('*');
+                    $this->db->from('mst_poli');
+                    $this->db->where('id', $dokter->id_poli);
+                    $hasil = array(
+                        'kirim' => $this->db->get()->row(),
+                        'status_poli' => 'Dokter ada!'
+                    );
+
+                } else {
+                    $this->db->select('*');
+                    $this->db->from('mst_poli');
+                    $hasil = array(
+                        'kirim' => $this->db->get()->result(),
+                        'status_poli' => 'Tidak ada!'
+                    );
+                }
+            } else {
+                $this->db->select('*');
+                $this->db->from('mst_poli');
+                $hasil = array(
+                    'kirim' => $this->db->get()->result(),
+                    'status_poli' => 'Tidak ada!'
+                );
+            }
+        }
+        return $hasil;
     }
 
 

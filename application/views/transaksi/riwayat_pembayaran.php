@@ -16,7 +16,7 @@
     })
     function get_data() {
         let cari = $('#cari').val();
-        let count_header = $(`#table-data thead tr th`).length
+        let count_header = $(`#table-data thead tr th`).length;
         let tanggal = $('#filter_tanggal').val();
 
         $.ajax({
@@ -38,7 +38,6 @@
                 $(`#table-data tbody`).html(loading);
             },
             success: function (res) {
-                console.log(res);
                 let table = "";
                 if (res.result) {
                     let i = 1;
@@ -239,7 +238,7 @@
                        <div class="col-sm-3">
                             <input type="text" class="form-control" id="filter_tanggal" name="filter_tanggal" placeholder="Cari riwayat tanggal..." autocomplete="off" onchange="filterTanggal()">
                         </div>
-                        <div class="col-sm-3 d-flex align-items-end">
+                        <div class="d-flex flex-column" style="width: auto;">
                             <button type="button" class="btn btn-warning w-100" onclick="$('#filter_tanggal').val(''); filterTanggal();">
                                 <i class="fas fa-search me-2"></i>Reset Filter
                             </button>

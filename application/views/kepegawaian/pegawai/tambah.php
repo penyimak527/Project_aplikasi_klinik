@@ -172,7 +172,7 @@
 								<label for="tambah_contoh" class="col-sm-2 col-form-label">Nomor telpon</label>
 								<div class="col-sm-10">
 									<input type="text" class="form-control" name="no_tp" id="no_tp"
-										placeholder="Nomor telpon" required autocomplete="off" />
+										placeholder="Nomor telpon" required autocomplete="off"  inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
 								</div>
 							</div>
 							<div class="mb-3 row">

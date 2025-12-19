@@ -2,14 +2,14 @@
 class M_tindakan extends CI_Model
 {
     //tampil data
-    public function result_dat()
+    public function result_dat($carig = null)
     {
         $cari = $this->input->post('cari');
 
         // $this->db->join('mst_poli', 'mst_poli.id = mst_tindakan.id_poli' );
         $sql = "SELECT a.* FROM mst_tindakan a WHERE 1=1";
         $params = [];
-        if ($cari != '') {
+        if ($cari != '' || $carig) {
             $sql .= " AND (a.nama LIKE ? OR a.nama_poli LIKE ?)";
             $params[] = "%$cari%";
             $params[] = "%$cari%";
@@ -159,8 +159,26 @@ class M_tindakan extends CI_Model
         $this->db->select('*');
         $this->db->from('mst_poli');
         return $this->db->get()->result();
-        ['status' => false, 'msg' => 'data kategori ada'];
+        // ['status' => false, 'msg' => 'data kategori ada'];
     }
-
+public function cek_duplikat($nama_tindakan)
+    {
+        $this->db->where('nama', $nama_tindakan);
+        $query = $this->db->get('mst_tindakan');
+        if ($query->num_rows() > 0) {
+            return TRUE;
+        }
+        return FALSE;
+    }
+      public function insert_master_data($data)
+    {
+        $nama_tindakan = $data['nama'];
+        if ($this->cek_duplikat($nama_tindakan)) {
+            return false;
+        } else {
+            $this->db->insert('mst_tindakan', $data);
+        }
+        return $this->db->insert_id();
+    }
 }
 ?>

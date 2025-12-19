@@ -19,28 +19,28 @@ class Antrian extends CI_Controller
     $data['jumlah_pasien'] = $this->db->where('tanggal_antri', $date)->count_all_results('rsp_antrian');
     $this->load->view('antrian/panel_antrian', $data);
   }
-  public function belum_p()
-  {
-    $data = $this->model->result_p();
-    if ($data) {
-      $response = array(
-        'result' => true,
-        'data' => $data
-      );
-    } else {
-      $response = array(
-        'result' => false,
-        'message' => 'Data Kosong'
-      );
-    }
+  // public function belum_p()
+  // {
+  //   $data = $this->model->result_p();
+  //   if ($data) {
+  //     $response = array(
+  //       'result' => true,
+  //       'data' => $data
+  //     );
+  //   } else {
+  //     $response = array(
+  //       'result' => false,
+  //       'message' => 'Data Kosong'
+  //     );
+  //   }
 
-    $this->output
-      ->set_status_header(200)
-      ->set_content_type('application/json', 'utf-8')
-      ->set_output(json_encode($response, JSON_PRETTY_PRINT))
-      ->_display();
-    exit;
-  }
+  //   $this->output
+  //     ->set_status_header(200)
+  //     ->set_content_type('application/json', 'utf-8')
+  //     ->set_output(json_encode($response, JSON_PRETTY_PRINT))
+  //     ->_display();
+  //   exit;
+  // }
   public function index_dokter()
   {
     $data['active'] = 'Antrian';
@@ -121,8 +121,8 @@ class Antrian extends CI_Controller
       ->_display();
     exit;
   }
-  public function poli(){
-    $data = $this->model->poli();
+  public function selectp(){
+    $data = $this->model->selectp();
 
     if ($data) {
       $response = array(

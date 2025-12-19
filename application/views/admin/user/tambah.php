@@ -4,14 +4,25 @@
     $('#btn_cari').click(function () {
       pegawai();
     });
-     $('#pagination').on('click', function (e) {
+    $('#pagination').on('click', function (e) {
       e.stopPropagation();
     });
+    $('#btn-lihat-pass').click(function () {
+      let input = $('#userpassword');
+      let icon = $(this).find('i');
+      if (input.attr('type') === 'password') {
+        input.attr('type', 'text');
+        icon.removeClass('fa-eye-slash').addClass('fa-eye');
+      } else {
+        input.attr('type', 'password');
+        icon.removeClass('fa-eye').addClass('fa-eye-slash');
+      }
+    });
   });
-   function validateForm(formSelector) {
+  function validateForm(formSelector) {
     let isValid = true;
     $(formSelector + ' [required]').removeClass('is-invalid');
-    $(formSelector + ' [required]').each(function() {
+    $(formSelector + ' [required]').each(function () {
       if (!$(this).val() || $(this).val().trim() === '') {
         isValid = false;
         $(this).addClass('is-invalid');
@@ -36,7 +47,7 @@
     btn.prop("disabled", true).text("Mengirim...");
 
     e.preventDefault();
-      if (!validateForm('#form_tambah')) {
+    if (!validateForm('#form_tambah')) {
       btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
 
       return;
@@ -96,7 +107,7 @@
     });
   }
   function pegawai() {
-   // const nama_p = $('#nama_pg').val(); 
+    // const nama_p = $('#nama_pg').val(); 
     let count_header = $(`#table-data thead tr th`).length;
     $.ajax({
       url: '<?= base_url("admin/user/pegawai") ?>',
@@ -114,7 +125,9 @@
 
         $(`#table-data tbody`).html(loading);
       },
-      success: function (res) {                       
+      success: function (res) {
+        console.log(res);
+
         if (res.result && res.data.length > 0) {
           let table = "";
           let i = 1;
@@ -141,11 +154,11 @@
   }
   function level() {
     $.ajax({
-      url: '<?= base_url()?>admin/user/level',
+      url: '<?= base_url() ?>admin/user/level',
       type: 'GET',
       dataType: 'JSON',
       success: function (res) {
-          if (res.data != null) {
+        if (res.data != null) {
           res.data.forEach(item => {
             $('#id_level').append($('<option>', {
               value: item.id,
@@ -166,7 +179,7 @@
   function pilihPegawai(encodedString) {
     const ambil = JSON.parse(atob(encodedString));
     $('#id_pegawai').val(ambil.id);
-    $('#nama_pg').val(ambil.nama);    
+    $('#nama_pg').val(ambil.nama);
     $('#modalpegawai').modal('hide');
   }
   function cariPegawaiModal(keyword) {
@@ -229,8 +242,7 @@
       <div class="page-title-box">
         <div class="float-end">
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a
-                href="<?php echo base_url(); ?>admin/user"><?php echo $title; ?></a></li>
+            <li class="breadcrumb-item"><a href="<?php echo base_url(); ?>admin/user"><?php echo $title; ?></a></li>
             <li class="breadcrumb-item active">Tambah</li>
           </ol>
         </div>
@@ -253,7 +265,8 @@
                 <div class="col-sm-10">
                   <div class="row">
                     <div class="col-sm-11">
-                      <input type="text" class="form-control" name="nama_pg" id="nama_pg" placeholder="Klik Tombol Cari" autocomplete="off" readonly required>
+                      <input type="text" class="form-control" name="nama_pg" id="nama_pg" placeholder="Klik Tombol Cari"
+                        autocomplete="off" readonly required>
                       <input type="hidden" name="id_pegawai" id="id_pegawai" readonly class="form-control">
                     </div>
                     <div class="col-sm-1">
@@ -272,8 +285,13 @@
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Password</label>
                 <div class="col-sm-10">
-                  <input type="password" class="form-control" name="password" id="password" placeholder="Password"
-                    autocomplete="off" required>
+                  <div class="d-flex">
+                    <input type="password" class="form-control" name="password" id="userpassword" placeholder="Password"
+                      autocomplete="off" required>
+                    <button class="btn btn-outline-secondary ms-1" type="button" id="btn-lihat-pass">
+                      <i class="fas fa-eye-slash"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="mb-3 row">
@@ -282,7 +300,8 @@
                   <select name="id_level" id="id_level" class="form-select" required>
                     <option value="">Pilih Level</option>
                   </select>
-                  <input type="hidden" class="form-control" name="nama_level" id="nama_level" autocomplete="off" readonly>
+                  <input type="hidden" class="form-control" name="nama_level" id="nama_level" autocomplete="off"
+                    readonly>
                 </div>
               </div>
               <div class="mb-3 row">

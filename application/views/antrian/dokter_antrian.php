@@ -1,7 +1,15 @@
+<?php
+$ci = &get_instance();
+$ci->load->model('admin/m_level');
+$id_level = $ci->session->userdata('id_level');
+$nama_user = $ci->session->userdata('username');
+$nama_level = $ci->session->userdata('nama_level');
+?>
 <script>
   $(document).ready(function () {
-    get_data();
-    select();
+    setInterval(() => {
+      get_data();
+    }, 5000);
     $("#jumlah_tampil_antrian").change(function () {
       get_data();
     });
@@ -16,8 +24,9 @@
       $("#sudah_konfirmasi").show();
       $("#masih_antri").hide();
     });
+    select();
     $(document).on('change', '#poli-select', function () {
-      get_data(); // Refresh data ketika poli berubah
+      get_data(); 
     });
   });
   function get_data() {
@@ -28,8 +37,8 @@
     const pilih = 'Pilih terlebih poli terlebih dahulu!';
     if (selectedPoli == null || selectedPoli === '-') {
 
-        // TAMPILKAN PESAN DI TABLE ANTRIAN
-        $("#table-antrian tbody").html(`
+      // TAMPILKAN PESAN DI TABLE ANTRIAN
+      $("#table-antrian tbody").html(`
             <tr>
                 <td colspan="${count_header}" class="text-center">
                     Pilih poli terlebih dahulu!
@@ -37,8 +46,8 @@
             </tr>
         `);
 
-        // TAMPILKAN PESAN DI TABLE KONFIRMASI
-        $("#table-konfirmasi tbody").html(`
+      // TAMPILKAN PESAN DI TABLE KONFIRMASI
+      $("#table-konfirmasi tbody").html(`
             <tr>
                 <td colspan="${count_headerk}" class="text-center">
                     Pilih poli terlebih dahulu!
@@ -46,7 +55,7 @@
             </tr>
         `);
 
-        return; 
+      return;
     }
     $.ajax({
       url: "<?php echo base_url(); ?>antrian/antrian/result_data",
@@ -69,6 +78,8 @@
       success: function (res) {
         let table = "";
         let table1 = "";
+        let no1 = 1;
+        let no2 = 1;
         if (res.result) {
           let dataMenunggu = res.data.filter(item => item.status_antrian !== "Konfirmasi");
           let dataKonfirmasi = res.data.filter(item => item.status_antrian === "Konfirmasi");
@@ -105,6 +116,7 @@
             if (item.status_antrian == "Konfirmasi") {
               table1 += `
                             <tr>
+                                <td>${no1++}</td>
                                 <td>${item.no_antrian}</td>
                                 <td>${item.nama_pasien}</td>
                                 <td>${item.nama_poli}</td>
@@ -112,7 +124,7 @@
                                 <td class="text-center"><button id="btnView_${item.kode_invoice}" class="btn btn-sm" onclick="v_konfirm('${item.kode_invoice}')"><i class="fas fa-briefcase-medical"></i></button></td>
                             </tr>
                         `;
-               cekButtonKecantikan(item.kode_invoice);
+              cekButton(item.kode_invoice);
             } else {
               let aksiButton = "";
               if ((i - 1) === activeIndex) {
@@ -140,6 +152,7 @@
 
               table += `
                              <tr>
+                                <td>${no2++}</td>
                                 <td>${item.no_antrian}</td>
                                 <td>${item.nama_pasien}</td>
                                 <td>${item.nama_poli}</td>
@@ -179,12 +192,14 @@
         get_data();
       });
   }
-  function cekButtonKecantikan(kode_invoice) {
+  function cekButton(kode_invoice) {
+      let id_poli = $('#poli-select').val();
     $.ajax({
       url: "<?= base_url('antrian/antrian/cek_btn') ?>",
       type: "POST",
       data: {
-        kode_invoice: kode_invoice  // Perbaiki format data
+        kode_invoice: kode_invoice,  // Perbaiki format data
+        id_poli: id_poli,
       },
       dataType: "json",
       success: function (res) {
@@ -219,7 +234,6 @@
             .removeClass("btn-secondary")
             .addClass("btn-warning")
             .html('<i class="fas fa-briefcase-medical"></i>');
-          console.log('Button enabled - Data Belum Lengkap');
         }
 
         else {
@@ -227,7 +241,6 @@
             .addClass("btn-secondary")
             .removeClass("btn-info")
             .html('<i class="fas fa-check"></i>');
-          console.log('Hiding button - Data Sudah Lengkap');
           return;
         }
       },
@@ -239,10 +252,12 @@
     });
   }
   function v_konfirm(kode_invoice) {
+    let id_poli = $('#poli-select').val();
     $.post({
       url: "<?= base_url() ?>antrian/antrian/cek_konfirmasi",
       data: {
-        kode_invoice: kode_invoice  // Perbaiki format data
+        kode_invoice: kode_invoice,  // Perbaiki format data
+        id_poli : id_poli,
       },
       dataType: "JSON",
       beforeSend: function () {
@@ -261,7 +276,7 @@
         if (data.status == 'ada') {
           Swal.fire({
             title: "Berhasil!",
-            text: "Data pasien siap dilihat",
+            text: "Data pasien siap diubah!",
             icon: "success",
             showCancelButton: false,
             showConfirmButton: true,
@@ -270,8 +285,18 @@
             allowOutsideClick: false,
           }).then((result) => {
             if (result.isConfirmed) {
-              // Redirect ke poli kecantikan
-              window.location.href = "<?php echo base_url() ?>poli/kecantikan/view_proses/" + kode_invoice;
+              let id_polidata = data.id_poli_datas;
+                if (id_poli == 16) {
+                window.location.href =
+                  "<?php echo base_url() ?>poli/kecantikan/view_proses/" +
+                  kode_invoice;
+              } else if (id_poli == 15) {
+                window.location.href =
+                  `<?php echo base_url('poli/gigi/view_proses/'); ?>${id_polidata}`;
+              }
+              else {
+                get_data();
+              }
             }
           });
         } else {
@@ -415,7 +440,11 @@
                 window.location.href =
                   "<?php echo base_url() ?>poli/kecantikan/view_proses/" +
                   kode_invoice;
-              } else {
+              } else if (id_poli == 15) {
+                window.location.href =
+                  `<?php echo base_url('poli/gigi/proses/'); ?>${kode_invoice}`;
+              }
+              else {
                 get_data();
               }
             }
@@ -485,22 +514,36 @@
       },
     });
   }
+
   // Fungsi select untuk mengambil data poli
   function select() {
-    $.get({
-      url: "<?= base_url() ?>antrian/antrian/poli",
+    const selectidLevel = '<?= $id_level ?>';
+    $.post({
+      data: {
+        id_level: selectidLevel,
+      },
+      url: "<?= base_url() ?>antrian/antrian/selectp",
       dataType: "json",
       success: function (res) {
         if (res != null) {
-          $('#poli-select').empty().append('<option value="-">Semua Poli</option>');
-          res.data.forEach(item => {
-            $('#poli-select').append($('<option>', {
-              value: item.id,
-              text: item.nama,
-              'data-nama': item.nama,
-              'data-id': item.id
-            }))
-          });
+          const data = res.data;
+          // const selectidpoli = '<= $id_level?>';
+          if (data.poli.status_poli == 'Dokter ada!') {
+            const item = data.poli.kirim;
+            $('#poli-select').html(`<option value="${item.id}">${item.nama}</option>`);
+                get_data();
+          } else {
+            $('#poli-select').empty().append('<option value="-">-- Pilih Poli --</option>');
+            data.poli.kirim.forEach(item => {
+              $('#poli-select').append($('<option>', {
+                value: item.id,
+                text: item.nama,
+                'data-nama': item.nama,
+                'data-id': item.id
+              }))
+            });
+                get_data();
+          }
         }
       },
     })
@@ -541,18 +584,21 @@
             <li class="nav-item" role="presentation">
               <button class="nav-link active" id="antrian-tab" data-bs-toggle="tab" data-bs-target="#tab-antrian"
                 type="button" role="tab">
-                Menunggu
+                Antrian Menunggu
               </button>
             </li>
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="konfirmasi-tab" data-bs-toggle="tab" data-bs-target="#tab-konfirmasi"
                 type="button" role="tab">
-                Dikonfirmasi
+                Antrian Terkonfirmasi
               </button>
             </li>
             <li class="nav-item ms-auto poli-selector">
-              <select class="form-select" id="poli-select">
-              </select>
+              <div class="d-flex align-items-center">
+                <label for="select_poli" class="form-label me-2 mb-0">Poli:</label>
+                <select class="form-select" id="poli-select">
+                </select>
+              </div>
             </li>
           </ul>
           <!-- Tab Content -->
@@ -563,6 +609,7 @@
                 <table class="table mb-0 table-hover" id="table-antrian">
                   <thead class="thead-light">
                     <tr>
+                      <th>No</th>
                       <th>No Antrian</th>
                       <th>Nama Pasien</th>
                       <th>Nama Poli</th>
@@ -600,6 +647,7 @@
                 <table class="table mb-0 table-hover" id="table-konfirmasi">
                   <thead class="thead-light">
                     <tr>
+                      <th>No</th>
                       <th>No Antrian</th>
                       <th>Nama Pasien</th>
                       <th>Nama Poli</th>

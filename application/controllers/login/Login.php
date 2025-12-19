@@ -4,13 +4,13 @@ class Login extends CI_Controller
     function __construct()
     {
         parent::__construct();  
-
         $this->load->model('login/M_login', 'model');
         $this->load->library('session');
     }
 
     public function index()
-    {        if($this->session->userdata('logged_in')) {
+    { 
+        if(!$this->session->userdata('username') == null) {
             redirect('welcome');
         }
         $this->load->view('login/login');

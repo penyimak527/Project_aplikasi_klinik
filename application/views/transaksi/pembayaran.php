@@ -301,8 +301,6 @@
     //   }
     function pembayaran(encodedString) {
         const ambil = JSON.parse(atob(encodedString));
-        // console.log('Data untuk pembayaran:', ambil);
-
         // Kosongkan container sebelumnya
         $('#detail_tindakan_list').empty();
         // $('#detail_resepobat_list').empty();
@@ -560,7 +558,7 @@
                                 <div class="col-sm-8">
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
-                                        <input type="text" class="form-control fw-bold bg-light" id="total_invoice"
+                                        <input type="text" class="form-control fw-bold bg-light text-success" id="total_invoice"
                                             name="total_invoice" readonly>
                                     </div>
                                 </div>

@@ -1,6 +1,17 @@
 <script type="text/javascript">
   $(document).ready(function () {
     level();
+        $('#btn-lihat-pass').click(function () {
+      let input = $('#password');
+      let icon = $(this).find('i');
+      if (input.attr('type') === 'password') {
+        input.attr('type', 'text');
+        icon.removeClass('fa-eye-slash').addClass('fa-eye');
+      } else {
+        input.attr('type', 'password');
+        icon.removeClass('fa-eye').addClass('fa-eye-slash');
+      }
+    });
   });
   function validateForm(formSelector) {
     let isValid = true;
@@ -155,9 +166,12 @@
               </div>
               <div class="mb-3 row">
                 <label for="tambah_contoh" class="col-sm-2 col-form-label">Password</label>
-                <div class="col-sm-10">
+                <div class="col-sm-10 d-flex">
                   <input type="password" class="form-control" name="password" id="password"
                     placeholder="Kosongkan Jika tidak Ingin di Edit" autocomplete="off">
+                                        <button class="btn btn-outline-secondary ms-1" type="button" id="btn-lihat-pass">
+                      <i class="fas fa-eye-slash"></i>
+                    </button>
                 </div>
               </div>
               <div class="mb-3 row">

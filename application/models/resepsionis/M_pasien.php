@@ -93,16 +93,16 @@ class M_pasien extends CI_Model
   public function edit()
   {
     $inputan = array(
-      'nama_pasien' => ucfirst($this->input->post('nama_pasien')),
+      'nama_pasien' => ucwords($this->input->post('nama_pasien')),
       'nik' => $this->input->post('nik'),
       'jenis_kelamin' => $this->input->post('jk'),
       'tanggal_lahir' => $this->input->post('tgl_lahir'),
       'umur' => $this->input->post('umur'),
-      'alamat' => ucfirst($this->input->post('alamat')),
+      'alamat' => ucwords($this->input->post('alamat')),
       'pekerjaan' => ucfirst($this->input->post('pekerjaan')),
       'no_telp' => $this->input->post('no_tp'),
       'status_perkawinan' => $this->input->post('st_perkawinan'),
-      'nama_wali' => ucfirst($this->input->post('nama_wali')),
+      'nama_wali' => ucwords($this->input->post('nama_wali')),
       'golongan_darah' => $this->input->post('golongan_darah'),
       'alergi' => ucfirst($this->input->post('alergi')),
       'status_operasi' => ucfirst($this->input->post('status_op')),

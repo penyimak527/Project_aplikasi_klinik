@@ -17,6 +17,8 @@ function is_active($link)
 $daftar_ikon = [
     'Dashboard' => 'ti ti-smart-home',
     'Master Data' => 'ti ti-apps',
+    'Gudang' => 'ti ti-box menu-icon',
+    'Pembelian' => 'ti ti-truck menu-icon',
     'Kepegawaian' => 'ti ti-users',
     'Resepsionis' => 'ti ti-bell',
     'Antrian' => 'ti ti-ticket',
@@ -47,6 +49,7 @@ $daftar_ikon = [
     <link href="<?php echo base_url(); ?>assets/libs/animate.css/animate.min.css" rel="stylesheet" type="text/css">
     <link href="<?php echo base_url(); ?>assets/libs/vanillajs-datepicker/css/datepicker.min.css" rel="stylesheet"
         type="text/css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="<?php echo base_url(); ?>assets/js/jquery.min.js"></script>
     <link href="<?php echo base_url(); ?>assets/libs/mobius1-selectr/selectr.min.css" rel="stylesheet" type="text/css"
         />
@@ -79,8 +82,7 @@ $daftar_ikon = [
             </div><!--end main-icon-menu-body-->
             <div class="pro-metrica-end">
                 <a href="#" class="profile">
-                    <img src="<?php echo base_url(); ?>assets/images/users/user-4.jpg" alt="profile-user"
-                        class="rounded-circle thumb-sm">
+                     <img src="<?php echo base_url(); ?>assets/images/users/user-vector.png" alt="profile-user" class="rounded-circle thumb-sm">
                 </a>
             </div><!--end pro-metrica-end-->
         </div>
@@ -132,8 +134,7 @@ $daftar_ikon = [
                     <a class="nav-link dropdown-toggle nav-user" data-bs-toggle="dropdown" href="#" role="button"
                         aria-haspopup="false" aria-expanded="false">
                         <div class="d-flex align-items-center">
-                            <img src="<?php echo base_url(); ?>assets/images/users/user-4.jpg" alt="profile-user"
-                                class="rounded-circle me-2 thumb-sm" />
+                            <img src="<?php echo base_url(); ?>assets/images/users/user-vector.png" alt="profile-user" class="rounded-circle me-2 thumb-sm" />
                             <div>
                                 <small
                                     class="d-none d-md-block font-11">  <?php echo $nama_level; ?></small>

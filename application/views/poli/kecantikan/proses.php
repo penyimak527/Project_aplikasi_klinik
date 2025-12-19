@@ -1,14 +1,14 @@
 <style>
- .dropify-wrapper {
-    height: 170px !important;
-    width: 100% !important;
-}
+    .dropify-wrapper {
+        height: 170px !important;
+        width: 100% !important;
+    }
 
-.dropify-render img {
-    object-fit: contain !important;
-    width: 100% !important;
-    height: 100% !important;
-}
+    .dropify-render img {
+        object-fit: contain !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
 </style>
 <script>
     $(document).ready(function () {
@@ -110,9 +110,9 @@
     }
 
     function tambah(e) {
-         let btn = $(e.target).closest('button');
-    e.preventDefault();
-    btn.prop("disabled", true).text("Mengirim...");
+        let btn = $(e.target).closest('button');
+        e.preventDefault();
+        btn.prop("disabled", true).text("Mengirim...");
         if (!validateForm('#form_tambah')) {
             btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             return;
@@ -149,10 +149,10 @@
                         closeOnConfirm: false,
                         allowOutsideClick: false
                     }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '<?php echo base_url() ?>antrian/antrian/index_dokter'
-                            }
-                        })
+                        if (result.isConfirmed) {
+                            window.location.href = '<?php echo base_url() ?>antrian/antrian/index_dokter'
+                        }
+                    })
                 } else {
                     Swal.fire({
                         title: 'Gagal!',
@@ -165,7 +165,7 @@
                         closeOnConfirm: false,
                         allowOutsideClick: false
                     }).then((result) => {
-                         btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
+                        btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
                         if (result.isConfirmed) {
                             console.log('Gagal mengirim datanya');
                         }
@@ -183,9 +183,6 @@
         drEvent.init();
     }
     function cariDiagnosa(keyword) {
-        let insertid = $('input[name="id_diagnosa[]"]').map(function () {
-            return $(this).val();
-        }).get();
         let count_headerd = $(`#table-data1 thead tr th`).length;
         $.ajax({
             url: '<?= base_url("poli/kecantikan/diagnosa") ?>',
@@ -205,10 +202,9 @@
             },
             success: function (res) {
                 let table = "";
-                let filtered = res.data.filter(item => !insertid.includes(item.id_diagnosa))
-                if (res.status && filtered.length > 0) {
+                if (res.status && res.data.length > 0) {
                     let i = 1;
-                    filtered.forEach(item => {
+                    res.data.forEach(item => {
                         table += `
                             <tr style="cursor:pointer;" onclick="pilihDiagnosa('${btoa(JSON.stringify(item))}')">
                             <td>${i++}</td>
@@ -217,7 +213,7 @@
                         `;
                     });
                 } else {
-                    table = `<tr><td colspan="6" class="text-center">Data tidak ditemukan</td></tr>`;
+                    table = `<tr><td>Diagnosa tidak ditemukan</td></tr>`;
                 }
                 $('#table-data1 tbody').html(table);
                 paging1();
@@ -229,11 +225,7 @@
     }
 
     function cariTindakan(keyword) {
-        // console.log(keyword);
         let count_headert = $(`#table-data thead tr th`).length;
-        let insert_idt = $('input[name="id_tindakan[]"]').map(function () {
-            return $(this).val();
-        }).get();
         $.ajax({
             url: '<?= base_url("poli/kecantikan/tindakan") ?>',
             data: {
@@ -253,11 +245,10 @@
                 $(`#table-data tbody`).html(loading);
             },
             success: function (res) {
-                let filteredt = res.data.filter(item => !insert_idt.includes(item.id_tindakan));
                 let table = "";
-                if (res.status && filteredt.length > 0) {
+                if (res.status && res.data.length > 0) {
                     let i = 1;
-                    for (const item of filteredt) {
+                    for (const item of res.data) {
                         table += `
             <tr style="cursor:pointer;" onclick="pilihTindakan('${btoa(JSON.stringify(item))}')">
               <td>${i++}</td>
@@ -267,7 +258,7 @@
           `;
                     }
                 } else {
-                    table = `<tr><td colspan="6" class="text-center">Data tidak ditemukan</td></tr>`;
+                    table = `<tr><td>Tindakan tidak ditemukan</td></tr>`;
                 }
                 $('#table-data tbody').html(table);
                 paging();
@@ -279,12 +270,6 @@
     }
     function cariBarang(nama_barang) {
         let count_headerb = $('#table-data2 thead tr th').length;
-
-        // AMBIL SEMUA ID OBAT DETAIL YANG SUDAH ADA DI TABEL RESEP
-        let insert_idb = $('input[name^="obat"][name$="[id_obat_detail_o]"]').map(function () {
-            return $(this).val().toString();
-        }).get();
-        console.log('cari barang insert nya :' + insert_idb);
         $.ajax({
             url: '<?= base_url("poli/kecantikan/obat") ?>',
             data: { carit: nama_barang },
@@ -302,19 +287,10 @@
                 $('#table-data2 tbody').html(loading);
             },
             success: function (res) {
-                // console.log('Data obat dengan satuan terbesar:', res);
-
-                // FILTER BARANG AGAR TIDAK MUNCUL LAGI
-                let filteredb = res.data.filter(item =>
-                    !insert_idb.includes(item.id_barang_detail.toString())
-                );
-
                 let table = "";
-                if (res.status && filteredb.length > 0) {
+                if (res.status && res.data.length > 0) {
                     let i = 1;
-
-                    // GUNAKAN filteredb BUKAN res.data
-                    for (const item of filteredb) {
+                    for (const item of res.data) {
                         table += `
                     <tr style="cursor:pointer;" onclick="pilihBarang('${btoa(JSON.stringify(item))}')">
                         <td>${i++}</td>
@@ -335,74 +311,70 @@
         });
     }
 
-  function pilihBarang(itemBase64) {
-    const item = JSON.parse(atob(itemBase64));
-    const itemId = item.id_barang_detail.toString();
-    const racikanId = $('#modalObat').data('target-racikan');
-    if (racikanId) {
+    function pilihBarang(itemBase64) {
+        const item = JSON.parse(atob(itemBase64));
+        const itemId = item.id_barang_detail.toString();
+        const racikanId = $('#modalObat').data('target-racikan');
+        if (racikanId) {
+            // hanya cek obat dalam racikan ini saja!
+            let existingRacikanIds = $(`input[name^="racikan[${racikanId}]"][name$="[id]"]`)
+                .map(function () {
+                    return $(this).val().toString();
+                }).get();
+            if (existingRacikanIds.includes(itemId)) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Peringatan!",
+                    text: "Obat ini sudah ada dalam racikan ini!"
+                });
+                return;
+            }
 
-        // hanya cek obat dalam racikan ini saja!
-        let existingRacikanIds = $(`input[name^="racikan[${racikanId}]"][name$="[id]"]`)
+            // Bila lolos, tambahkan ke racikan
+            addRowToRacikan(normalize(item), racikanId);
+
+            $('#modalObat').removeData('target-racikan');
+            $('#modalObat').modal('hide');
+            return;
+        }
+
+        let existingObatIds = $(`input[name^="obat"][name$="[id_obat_detail_o]"]`)
             .map(function () {
                 return $(this).val().toString();
             }).get();
 
-        console.log("ID dalam racikan", racikanId, ":", existingRacikanIds);
-
-        if (existingRacikanIds.includes(itemId)) {
+        if (existingObatIds.includes(itemId)) {
             Swal.fire({
                 icon: "warning",
                 title: "Peringatan!",
-                text: "Obat ini sudah ada dalam racikan ini!"
+                text: "Obat ini sudah ada dalam daftar obat!"
             });
             return;
         }
 
-        // Bila lolos, tambahkan ke racikan
-        addRowToRacikan(normalize(item), racikanId);
+        // Bila lolos, tambahkan ke obat biasa
+        tambah_obat_rsp(normalize(item));
 
-        $('#modalObat').removeData('target-racikan');
         $('#modalObat').modal('hide');
-        return;
     }
 
-    let existingObatIds = $(`input[name^="obat"][name$="[id_obat_detail_o]"]`)
-        .map(function () {
-            return $(this).val().toString();
-        }).get();
 
-    if (existingObatIds.includes(itemId)) {
-        Swal.fire({
-            icon: "warning",
-            title: "Peringatan!",
-            text: "Obat ini sudah ada dalam daftar obat!"
-        });
-        return;
+    /** Normalisasi data item */
+    function normalize(item) {
+        return {
+            id: item.id_barang_detail,
+            id_barang: item.id_barang,
+            nama_barang: item.nama_barang || item.nama_barang_master,
+            satuan_barang: item.nama_satuan,
+            id_satuan_barang: item.id_satuan_barang,
+            urutan_satuan: item.urutan_satuan,
+            harga_awal: parseFloat(item.harga_awal) || 0,
+            harga_jual: parseFloat(item.harga_jual) || 0,
+            laba: parseFloat(item.laba) || 0,
+            kode_barang: item.kode_barang,
+            isi_satuan_turunan: item.isi_satuan_turunan
+        };
     }
-
-    // Bila lolos, tambahkan ke obat biasa
-    tambah_obat_rsp(normalize(item));
-
-    $('#modalObat').modal('hide');
-}
-
-
-/** Normalisasi data item */
-function normalize(item) {
-    return {
-        id: item.id_barang_detail,
-        id_barang: item.id_barang,
-        nama_barang: item.nama_barang || item.nama_barang_master,
-        satuan_barang: item.nama_satuan,
-        id_satuan_barang: item.id_satuan_barang,
-        urutan_satuan: item.urutan_satuan,
-        harga_awal: parseFloat(item.harga_awal) || 0,
-        harga_jual: parseFloat(item.harga_jual) || 0,
-        laba: parseFloat(item.laba) || 0,
-        kode_barang: item.kode_barang,
-        isi_satuan_turunan: item.isi_satuan_turunan
-    };
-}
 
     function paging($selector) {
         var jumlah_tampil = $('#jumlah_tampil').val();
@@ -524,11 +496,16 @@ function normalize(item) {
                 duplikat = true;
             }
         });
-
+        $("#table_tindakan tbody input[name='tindakanb[]']").each(function () {
+            if ($(this).val().toLowerCase() === item.nama.toLowerCase()) {
+                duplikat = true;
+                // duplikatValuet = $(this).val();
+            }
+        });
         if (duplikat) {
             Swal.fire({
                 title: "Peringatan!",
-                text: `Tindakan '${item.nama_tindakan}' sudah ditambahkan!`,
+                text: `Tindakan '${item.nama}' sudah ditambahkan!`,
                 icon: "warning",
                 confirmButtonColor: "#35baf5",
             });
@@ -541,7 +518,7 @@ function normalize(item) {
                 <input type="text" name="tindakan[]" class="form-control" value="${item.nama}" readonly>
             </td>
             <td>
-                <input type="text" name="harga_tindakan[]"  class="form-control input_htindakan"  value="${item.harga}" readonly>
+                <input type="text" name="harga_tindakan[]"  class="form-control input_htindakan"  value="${formatRupiah(item.harga)}" readonly>
             </td>
             <td>
                 <button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest('tr').remove(); hitungTotalTindakan()">X</button>
@@ -550,7 +527,7 @@ function normalize(item) {
     `;
         $('#table_tindakan tbody').append(row);
         const newInput = $('#table_tindakan tbody tr:last .input_htindakan')[0];
-        FormatCurrency1(newInput);
+        // FormatCurrency1(newInput);
         hitungTotalTindakan();
         $('#modalTindakan').modal("hide");
     }
@@ -580,6 +557,11 @@ function normalize(item) {
                 duplikatValuet = $(this).val();
             }
         });
+        $("#table_tindakan tbody input[name='tindakan[]']").each(function () {
+            if ($(this).val().toLowerCase() === nama_tindakan.toLowerCase()) {
+                duplikatValuet = $(this).val();
+            }
+        });
 
         if (duplikatValuet !== null) {
             Swal.fire({
@@ -605,7 +587,7 @@ function normalize(item) {
             </td>
             <td>
             
-                <input type="text" name="harga_tindakanb[]" class="form-control" onkeyup="FormatCurrency(this);" autocomplete="off" placeholder="Harga" value="${harga_tindakan}" readonly>
+                <input type="text" name="harga_tindakanb[]" class="form-control" onkeyup="FormatCurrency(this);" autocomplete="off" placeholder="Harga" value="${formatRupiah(harga_tindakan)}" readonly>
             </td>
             <td>
                 <button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest('tr').remove(); hitungTotalTindakan()">X</button>
@@ -638,10 +620,14 @@ function normalize(item) {
 
     function pilihDiagnosa(itemBase64) {
         const item = JSON.parse(atob(itemBase64));
-        // CEK DUPLIKAT berdasar id_diagnosa
         let duplikat = false;
         $("input[name='id_diagnosa[]']").each(function () {
             if ($(this).val() == item.id_diagnosa) {
+                duplikat = true;
+            }
+        });
+        $("#table_diagnosa tbody input[name='diagnosab[]']").each(function () {
+            if ($(this).val().toLowerCase() == item.nama_diagnosa.toLowerCase()) {
                 duplikat = true;
             }
         });
@@ -673,7 +659,6 @@ function normalize(item) {
     function tambahformD(nama_diagnosa) {
         // 1. Cek jika input kosong
         if (!nama_diagnosa.trim()) {
-            console.log("Nama diagnosa tidak boleh kosong");
             Swal.fire({
                 title: 'Gagal!',
                 text: "Inputan Diagnosa Kosong",
@@ -691,6 +676,11 @@ function normalize(item) {
         // 2. Cek duplikat di table
         let duplikatValue = null;
         $("#table_diagnosa tbody input[name='diagnosab[]']").each(function () {
+            if ($(this).val().toLowerCase() === nama_diagnosa.toLowerCase()) {
+                duplikatValue = $(this).val();
+            }
+        });
+        $("#table_diagnosa tbody input[name='diagnosa[]']").each(function () {
             if ($(this).val().toLowerCase() === nama_diagnosa.toLowerCase()) {
                 duplikatValue = $(this).val();
             }
@@ -789,7 +779,7 @@ function normalize(item) {
             <option value="loading" disabled>Loading satuan lainnya...</option>
         </select>
     `;
-    
+
         const hargaJual = parseFloat(item.harga_awal) + parseFloat(item.laba);
         const newRow = `
 <tr id="resep-row-${rowId}">
@@ -811,7 +801,7 @@ function normalize(item) {
                onkeyup="hitungSubtotal(${rowId})" data-row="${rowId}" required inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
     </td>
     <td>
-        <input type="text" class="form-control" name="obat[${rowId}][aturan_pakai_o]" placeholder="Aturan pakai" autocomplete="off" required>
+        <input type="text" class="form-control" name="obat[${rowId}][aturan_pakai_o]" placeholder="Contoh: 3x1 sehari" autocomplete="off" required>
     </td>
     <td>
         <input type="text" class="form-control harga" name="obat[${rowId}][harga_o]" 
@@ -838,7 +828,6 @@ function normalize(item) {
 </tr>`;
 
         $('#table_resep tbody').append(newRow);
-        // console.log(' Row dengan dropdown berhasil ditambahkan');
         hitungTotal();
 
         // SETELAH ROW DIBUAT, LOAD DATA SATUAN ASLI DARI DATABASE
@@ -847,8 +836,6 @@ function normalize(item) {
 
     // LOAD DATA SATUAN ASLI DARI DATABASE
     function muatSatuanObatAsli(id_barang, rowId, currentSatuanId) {
-        // console.log(' Loading data satuan asli untuk barang:', id_barang);
-
         $.ajax({
             url: '<?= base_url('poli/kecantikan/get_satuan_by_barang/') ?>' + id_barang,
             type: 'GET',
@@ -870,10 +857,6 @@ function normalize(item) {
     function updateDropdownDenganDataAsli(satuanList, rowId, currentSatuanId) {
         var row = $('#resep-row-' + rowId);
         var selectElement = row.find('.select-satuan');
-
-        // console.log(' Update dropdown dengan data asli:', satuanList);
-        // console.log('Current satuan ID:', currentSatuanId);
-
         // Kosongkan dropdown
         selectElement.empty();
 
@@ -902,7 +885,7 @@ function normalize(item) {
             );
         });
 
-        console.log(' Dropdown updated dengan ' + satuanList.length + ' pilihan satuan');
+        // console.log(' Dropdown updated dengan ' + satuanList.length + ' pilihan satuan');
     }
 
     // FUNCTION UNTUK UBAH SATUAN (VERSI FINAL)
@@ -1080,79 +1063,79 @@ function normalize(item) {
         hitungTotal();
     }
 
-   
+
     function hitungTotal() {
-    let totalObatHarga = 0;
-    let totalObatLaba = 0;
-    let totalObatHargaLaba = 0;
-    
-    let totalRacikanHarga = 0;
-    let totalRacikanLaba = 0;
-    let totalRacikanHargaLaba = 0;
-    
-    let totaltindakan = parseFloat($('#total_tindakan_hidden').val()) || 0;
+        let totalObatHarga = 0;
+        let totalObatLaba = 0;
+        let totalObatHargaLaba = 0;
 
-    // Hitung total dari obat biasa
-    $('[id^="resep-row-"]').each(function () {
-        const subtotalHarga = parseFloat($(this).find('.subtotal').val().replace(/[^0-9]/g, '')) || 0;
-        const subtotalLaba = parseFloat($(this).find('.sub-total-laba').val().replace(/[^0-9]/g, '')) || 0;
-        
-        totalObatHarga += subtotalHarga;
-        totalObatLaba += subtotalLaba;
-        totalObatHargaLaba += (subtotalHarga + subtotalLaba);
-    });
+        let totalRacikanHarga = 0;
+        let totalRacikanLaba = 0;
+        let totalRacikanHargaLaba = 0;
 
-    // Hitung total dari racikan - PERBAIKAN: KALIKAN DENGAN JUMLAH RACIKAN
-    $('[id^="racikan-"]').each(function() {
-        const racikanId = $(this).attr('id').replace('racikan-', '');
-        let racikanHarga = 0;
-        let racikanLaba = 0;
-        let racikanHargaLaba = 0;
+        let totaltindakan = parseFloat($('#total_tindakan_hidden').val()) || 0;
 
-        // Hitung total dari semua barang dalam racikan
-        $(`#racikan-obat-${racikanId} tr`).each(function() {
-            const subtotalHarga = parseFloat($(this).find('.subtotal-racikan').val().replace(/[^0-9]/g, '')) || 0;
-            const subtotalLaba = parseFloat($(this).find('.subtotallaba-racikan').val().replace(/[^0-9]/g, '')) || 0;
-            
-            racikanHarga += subtotalHarga;
-            racikanLaba += subtotalLaba;
-            racikanHargaLaba += (subtotalHarga + subtotalLaba);
+        // Hitung total dari obat biasa
+        $('[id^="resep-row-"]').each(function () {
+            const subtotalHarga = parseFloat($(this).find('.subtotal').val().replace(/[^0-9]/g, '')) || 0;
+            const subtotalLaba = parseFloat($(this).find('.sub-total-laba').val().replace(/[^0-9]/g, '')) || 0;
+
+            totalObatHarga += subtotalHarga;
+            totalObatLaba += subtotalLaba;
+            totalObatHargaLaba += (subtotalHarga + subtotalLaba);
         });
 
-        // DAPATKAN JUMLAH RACIKAN (berapa kali racikan ini dibuat)
-        const jumlahRacikan = parseFloat($(`input[name="racikan[${racikanId}][jumlah_r]"]`).val()) || 1;
-        
-        console.log(`Racikan ${racikanId}: Total barang = ${racikanHargaLaba}, Jumlah racikan = ${jumlahRacikan}`);
+        // Hitung total dari racikan - PERBAIKAN: KALIKAN DENGAN JUMLAH RACIKAN
+        $('[id^="racikan-"]').each(function () {
+            const racikanId = $(this).attr('id').replace('racikan-', '');
+            let racikanHarga = 0;
+            let racikanLaba = 0;
+            let racikanHargaLaba = 0;
 
-        // KALIKAN DENGAN JUMLAH RACIKAN - INI YANG TERLEWAT!
-        totalRacikanHarga += (racikanHarga * jumlahRacikan);
-        totalRacikanLaba += (racikanLaba * jumlahRacikan);
-        totalRacikanHargaLaba += (racikanHargaLaba * jumlahRacikan);
-    });
+            // Hitung total dari semua barang dalam racikan
+            $(`#racikan-obat-${racikanId} tr`).each(function () {
+                const subtotalHarga = parseFloat($(this).find('.subtotal-racikan').val().replace(/[^0-9]/g, '')) || 0;
+                const subtotalLaba = parseFloat($(this).find('.subtotallaba-racikan').val().replace(/[^0-9]/g, '')) || 0;
 
-    // Grand Total
-    const grandTotalHarga = totalObatHarga + totalRacikanHarga;
-    const grandTotalLaba = totalObatLaba + totalRacikanLaba;
-    const grandTotalHargaLaba = totalObatHargaLaba + totalRacikanHargaLaba;
-    
-    const totalSemua = totaltindakan + grandTotalHargaLaba;
+                racikanHarga += subtotalHarga;
+                racikanLaba += subtotalLaba;
+                racikanHargaLaba += (subtotalHarga + subtotalLaba);
+            });
 
-    // Update tampilan
-    $('#harga_tindakan_all').text(formatRupiah(totaltindakan));
-    $('#harga_total').text(formatRupiah(grandTotalHargaLaba));
-    $('#all_uang').val(grandTotalHargaLaba);
-    $('#tobat1').text(formatRupiah(totalSemua));
-    $('#tobat').val(totalSemua);
-    
-    console.log("=== DEBUG TOTAL ===");
-    console.log("Total Obat (Harga): " + totalObatHarga);
-    console.log("Total Obat (Laba): " + totalObatLaba);
-    console.log("Total Racikan (Harga): " + totalRacikanHarga);
-    console.log("Total Racikan (Laba): " + totalRacikanLaba);
-    console.log("Grand Total (Harga+Laba): " + grandTotalHargaLaba);
-    console.log("Total Tindakan: " + totaltindakan);
-    console.log("Total Semua: " + totalSemua);
-}
+            // DAPATKAN JUMLAH RACIKAN (berapa kali racikan ini dibuat)
+            const jumlahRacikan = parseFloat($(`input[name="racikan[${racikanId}][jumlah_r]"]`).val()) || 1;
+
+            // console.log(`Racikan ${racikanId}: Total barang = ${racikanHargaLaba}, Jumlah racikan = ${jumlahRacikan}`);
+
+            // KALIKAN DENGAN JUMLAH RACIKAN - INI YANG TERLEWAT!
+            totalRacikanHarga += (racikanHarga * jumlahRacikan);
+            totalRacikanLaba += (racikanLaba * jumlahRacikan);
+            totalRacikanHargaLaba += (racikanHargaLaba * jumlahRacikan);
+        });
+
+        // Grand Total
+        const grandTotalHarga = totalObatHarga + totalRacikanHarga;
+        const grandTotalLaba = totalObatLaba + totalRacikanLaba;
+        const grandTotalHargaLaba = totalObatHargaLaba + totalRacikanHargaLaba;
+
+        const totalSemua = totaltindakan + grandTotalHargaLaba;
+
+        // Update tampilan
+        $('#harga_tindakan_all').text(formatRupiah(totaltindakan));
+        $('#harga_total').text(formatRupiah(grandTotalHargaLaba));
+        $('#all_uang').val(grandTotalHargaLaba);
+        $('#tobat1').text(formatRupiah(totalSemua));
+        $('#tobat').val(totalSemua);
+
+        // console.log("=== DEBUG TOTAL ===");
+        // console.log("Total Obat (Harga): " + totalObatHarga);
+        // console.log("Total Obat (Laba): " + totalObatLaba);
+        // console.log("Total Racikan (Harga): " + totalRacikanHarga);
+        // console.log("Total Racikan (Laba): " + totalRacikanLaba);
+        // console.log("Grand Total (Harga+Laba): " + grandTotalHargaLaba);
+        // console.log("Total Tindakan: " + totaltindakan);
+        // console.log("Total Semua: " + totalSemua);
+    }
     // Fungsi untuk menghapus baris obat
     function hapus_obat_multiple(rowId) {
         $(`#row_obat_${rowId}`).remove();
@@ -1231,21 +1214,15 @@ function normalize(item) {
     }
     let racikanCounter = 0;
     function addRowToRacikan(item, racikanId) {
-        console.log(' Tambah obat ke racikan:', racikanId, item);
-
         // LOAD SATUAN UNTUK OBAT DI RACIKAN - SAMA SEPERTI OBAT BIASA
         muatSatuanUntukRacikan(item.id_barang, item, racikanId);
     }
     function muatSatuanUntukRacikan(id_barang, baseItem, racikanId) {
-        console.log(' Muat satuan untuk racikan:', racikanId);
-
         $.ajax({
             url: '<?= base_url('poli/kecantikan/get_satuan_by_barang/') ?>' + id_barang,
             type: 'GET',
             dataType: 'JSON',
             success: function (response) {
-                console.log(' Response satuan untuk racikan:', response);
-
                 if (response.status && response.data && response.data.length > 0) {
                     buatRowRacikanDenganDropdown(response.data, baseItem, racikanId);
                 } else {
@@ -1276,7 +1253,7 @@ function normalize(item) {
             <label class="col-sm-3 col-form-label">Jumlah</label>
             <div class="col-sm-9">
                 <input type="text" name="racikan[${racikanCounter}][jumlah_r]" 
-                       class="form-control" placeholder="Jumlah" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"  value="1"required>
+                       class="form-control" placeholder="Jumlah" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"  value="1" required>
             </div>
         </div>
         <div class="mb-2 row">
@@ -1325,10 +1302,10 @@ function normalize(item) {
     `;
         $('#racikan_container').append(html);
     }
-// <input type="text" name="racikan[${racikanCounter}][aturan_r]" 
-//                        class="form-control" placeholder="Aturan Pakai" required>
-// <input type="text" name="racikan[${racikanCounter}][keterangan_r]" 
-//                        class="form-control" placeholder="Keterangan">
+    // <input type="text" name="racikan[${racikanCounter}][aturan_r]" 
+    //                        class="form-control" placeholder="Aturan Pakai" required>
+    // <input type="text" name="racikan[${racikanCounter}][keterangan_r]" 
+    //                        class="form-control" placeholder="Keterangan">
     function buatRowRacikanDenganDropdown(satuanList, baseItem, racikanId) {
         const rowCount = $(`#racikan-obat-${racikanId} tr`).length;
         const newRowId = rowCount + 1;
@@ -1388,7 +1365,6 @@ function normalize(item) {
 
         $(`#racikan-obat-${racikanId}`).append(newRow);
         hitungTotalRacikan(racikanId);
-        console.log(' Obat berhasil ditambahkan ke racikan dengan dropdown');
     }
 
     function generateDropdownUntukRacikan(satuanList, selectedId, racikanId, rowId) {
@@ -1428,19 +1404,13 @@ function normalize(item) {
 
     // 3. TAMBAH OBAT KE RACIKAN (SUDAH DIMODIFIKASI DENGAN DROPDOWN)
     function addRowToRacikan(item, racikanId) {
-        console.log(' Tambah obat ke racikan:', racikanId, item);
         muatSatuanUntukRacikan(item.id_barang, item, racikanId);
     }
     function ubahSatuanRacikan(racikanId, obatId, selectElement) {
-        console.log(' Ubah satuan racikan:', racikanId, 'obat:', obatId);
-
         // DAPATKAN SELECTED OPTION DAN DATA ATTRIBUTES
         var selectedOption = $(selectElement).find('option:selected');
         var idSatuanBarang = selectedOption.val(); // id_satuan_barang dari value
         var idBarangDetail = selectedOption.data('id-barang-detail'); // id_barang_detail dari attribute
-
-        console.log('id_satuan_barang:', idSatuanBarang);
-        console.log('id_barang_detail:', idBarangDetail);
 
         if (!idBarangDetail) {
             console.error(' id_barang_detail tidak ditemukan');
@@ -1453,7 +1423,6 @@ function normalize(item) {
             type: 'GET',
             dataType: 'JSON',
             success: function (response) {
-                console.log('Response detail satuan:', response);
                 if (response.status) {
                     updateSatuanRacikan(racikanId, obatId, response.data);
                 }
@@ -1467,8 +1436,6 @@ function normalize(item) {
 
     function updateSatuanRacikan(racikanId, obatId, satuanData) {
         var row = $(`#racikan-obat-row-${racikanId}-${obatId}`);
-
-        console.log(' Update satuan racikan:', satuanData);
 
         // UPDATE SEMUA FIELD - SAMA SEPERTI OBAT BIASA
         row.find('.id-barang-detail-racikan').val(satuanData.id_barang_detail);
@@ -1494,8 +1461,6 @@ function normalize(item) {
 
         // HITUNG ULANG
         hitungSubtotalRacikan(racikanId, obatId);
-
-        console.log(' Satuan racikan berhasil diubah ke:', satuanData.satuan_barang);
     }
 
     function updateSatuanRacikanFromAttributes(racikanId, obatId, idBarangDetail) {
@@ -1529,7 +1494,6 @@ function normalize(item) {
     } function hapusObatDariRacikan(racikanId, obatId) {
         $(`#racikan-obat-row-${racikanId}-${obatId}`).remove();
         hitungTotalRacikan(racikanId);
-        console.log(' Obat dihapus dari racikan:', racikanId, obatId);
     }
     function buatRowRacikanFallback(baseItem, racikanId) {
         const rowCount = $(`#racikan-obat-${racikanId} tr`).length;
@@ -1574,47 +1538,47 @@ function normalize(item) {
         $(`#racikan-obat-${racikanId}`).append(newRow);
         hitungTotalRacikan(racikanId);
     }
-   
-function hitungSubtotalRacikan(racikanId, rowId) {
-    const row = $(`#racikan-obat-row-${racikanId}-${rowId}`);
-    const jumlah = parseFloat(row.find('.jumlah-racikan').val()) || 0;
-    
-    const harga = parseFloat(row.find('.harga-racikan').val().replace(/[^0-9]/g, '')) || 0;
-    const laba = parseFloat(row.find('.laba-racikan').val().replace(/[^0-9]/g, '')) || 0;
-    
-    // PERHITUNGAN YANG BENAR:
-    const subtotalHarga = jumlah * harga;        // Harga pokok saja
-    const subtotalLaba = jumlah * laba;          // Laba saja
-    const subtotalHargaPlusLaba = jumlah * (harga + laba); // Harga + Laba
-    
-    // UPDATE NILAI
-    row.find('.subtotal-racikan').val(formatRupiah(subtotalHarga));
-    row.find('.subtotallaba-racikan').val(formatRupiah(subtotalLaba));
-    row.find('.subtotal-racikanl').val(formatRupiah(subtotalHargaPlusLaba));
-    row.find('.subtotalabaharga-racikan').val(formatRupiah(subtotalHargaPlusLaba));
- hitungTotalRacikan(racikanId);
-}
+
+    function hitungSubtotalRacikan(racikanId, rowId) {
+        const row = $(`#racikan-obat-row-${racikanId}-${rowId}`);
+        const jumlah = parseFloat(row.find('.jumlah-racikan').val()) || 0;
+
+        const harga = parseFloat(row.find('.harga-racikan').val().replace(/[^0-9]/g, '')) || 0;
+        const laba = parseFloat(row.find('.laba-racikan').val().replace(/[^0-9]/g, '')) || 0;
+
+        // PERHITUNGAN YANG BENAR:
+        const subtotalHarga = jumlah * harga;        // Harga pokok saja
+        const subtotalLaba = jumlah * laba;          // Laba saja
+        const subtotalHargaPlusLaba = jumlah * (harga + laba); // Harga + Laba
+
+        // UPDATE NILAI
+        row.find('.subtotal-racikan').val(formatRupiah(subtotalHarga));
+        row.find('.subtotallaba-racikan').val(formatRupiah(subtotalLaba));
+        row.find('.subtotal-racikanl').val(formatRupiah(subtotalHargaPlusLaba));
+        row.find('.subtotalabaharga-racikan').val(formatRupiah(subtotalHargaPlusLaba));
+        hitungTotalRacikan(racikanId);
+    }
     function hitungTotalRacikan(racikanId) {
-    let totalHargaRacikan = 0;
-    let totalLabaRacikan = 0;
-    let totalHargaLabaRacikan = 0;
+        let totalHargaRacikan = 0;
+        let totalLabaRacikan = 0;
+        let totalHargaLabaRacikan = 0;
 
-    $(`#racikan-obat-${racikanId} tr`).each(function() {
-        const subtotalHarga = parseFloat($(this).find('.subtotal-racikan').val().replace(/[^0-9]/g, '')) || 0;
-        const subtotalLaba = parseFloat($(this).find('.subtotallaba-racikan').val().replace(/[^0-9]/g, '')) || 0;
-        
-        totalHargaRacikan += subtotalHarga;
-        totalLabaRacikan += subtotalLaba;
-        totalHargaLabaRacikan += (subtotalHarga + subtotalLaba);
-    });
+        $(`#racikan-obat-${racikanId} tr`).each(function () {
+            const subtotalHarga = parseFloat($(this).find('.subtotal-racikan').val().replace(/[^0-9]/g, '')) || 0;
+            const subtotalLaba = parseFloat($(this).find('.subtotallaba-racikan').val().replace(/[^0-9]/g, '')) || 0;
 
-    // Simpan total per racikan jika diperlukan
-    $(`#racikan-${racikanId}`).data('total-harga', totalHargaRacikan);
-    $(`#racikan-${racikanId}`).data('total-laba', totalLabaRacikan);
-    $(`#racikan-${racikanId}`).data('total-harga-laba', totalHargaLabaRacikan);
+            totalHargaRacikan += subtotalHarga;
+            totalLabaRacikan += subtotalLaba;
+            totalHargaLabaRacikan += (subtotalHarga + subtotalLaba);
+        });
 
-    hitungTotal();
-}
+        // Simpan total per racikan jika diperlukan
+        $(`#racikan-${racikanId}`).data('total-harga', totalHargaRacikan);
+        $(`#racikan-${racikanId}`).data('total-laba', totalLabaRacikan);
+        $(`#racikan-${racikanId}`).data('total-harga-laba', totalHargaLabaRacikan);
+
+        hitungTotal();
+    }
 </script>
 <div class="container-fluid">
     <!-- Page-Title -->
@@ -1815,44 +1779,38 @@ function hitungSubtotalRacikan(racikanId, rowId) {
                                         <div class="col-sm-10">
                                             <select name="status_foto" id="status_foto" class="form-select" required>
                                                 <option value="">Pilih Status Foto</option>
-                                                <option value="Sebelum">Sebelum</option>
-                                                <option value="Sesudah">Sesudah</option>
+                                                <?php
+                                                if (!empty($row)) { ?>
+                                                    <option value="Sebelum" <?= $row['status_foto'] == 'Sebelum' ? 'selected' : '' ?>>
+                                                        Sebelum
+                                                    </option>
+                                                    <option value="Sesudah" <?= $row['status_foto'] == 'Sesudah' ? 'selected' : '' ?>>
+                                                        Sesudah
+                                                    </option>
+                                                <?php } ?>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
-    <label class="col-sm-2 col-form-label">Upload Foto</label>
-
-    <div class="col-sm-10">
-        <div class="row">
-            <?php if (!empty($row['foto'])) { ?>
-            <div class="col-md-6">
-                <input type="file" 
-                       class="dropify_lama" 
-                       data-height="250" 
-                       name="foto_lama"
-                       id="dropify_lama" 
-                       data-max-file-size="2M" 
-                       data-show-remove="false"
-                       data-allowed-file-extensions="jpg png jpeg" 
-                       disabled />
-            </div>
-            <?php } ?>
-
-            <div class="col-md-6">
-                <input type="file" 
-                       class="dropify" 
-                       data-height="250" 
-                       name="upload_foto"
-                       id="upload_foto" 
-                       data-max-file-size="2M"
-                       data-allowed-file-extensions="jpg png jpeg" 
-                       required />
-            </div>
-        </div>
-    </div>
-</div>
-
+                                        <label class="col-sm-2 col-form-label">Upload Foto</label>
+                                        <div class="col-sm-10">
+                                            <div class="row">
+                                                <?php if (!empty($row['foto'])) { ?>
+                                                    <div class="col-md-6">
+                                                        <input type="file" class="dropify_lama" data-height="250"
+                                                            name="foto_lama" id="dropify_lama" data-max-file-size="2M"
+                                                            data-show-remove="false"
+                                                            data-allowed-file-extensions="jpg png jpeg" disabled />
+                                                    </div>
+                                                <?php } ?>
+                                                <div class="col-md-6">
+                                                    <input type="file" class="dropify" data-height="250"
+                                                        name="upload_foto" id="upload_foto" data-max-file-size="2M"
+                                                        data-allowed-file-extensions="jpg png jpeg" required />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <!-- detail end -->
                                     <hr>
                                     <!-- diagnosa start -->

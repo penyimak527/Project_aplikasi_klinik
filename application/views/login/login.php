@@ -48,10 +48,17 @@
                                                 placeholder="Masukkan Username">
                                         </div><!--end form-group-->
 
-                                        <div class="form-group mt-2">
+                                        <div class="form-group mt-2 mb-3">
                                             <label class="form-label" for="userpassword">Password</label>
-                                            <input type="password" class="form-control" name="password"
-                                                id="userpassword" placeholder="Masukkan Password" autocomplete="off">
+                                            <div class="d-flex">
+                                                <input type="password" class="form-control" name="password"
+                                                    id="userpassword" placeholder="Masukkan Password"
+                                                    autocomplete="off">
+                                                <button class="btn btn-outline-secondary ms-1" type="button"
+                                                    id="btn-lihat-pass">
+                                                    <i class="fas fa-eye-slash"></i>
+                                                </button>
+                                            </div>
                                         </div><!--end form-group-->
 
                                         <div class="form-group mb-0 row">
@@ -84,6 +91,17 @@
 <script src="<?php echo base_url(); ?>assets/js/pages/sweet-alert.init.js"></script>
 
 <script>
+      $('#btn-lihat-pass').click(function () {
+            let input = $('#userpassword');
+            let icon = $(this).find('i');
+            if (input.attr('type') === 'password') {
+                input.attr('type', 'text');
+                icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            } else {
+                input.attr('type', 'password');
+                icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            }
+        });
     $(document).ready(function () {
         $('#form-login').submit(function (e) {
             let btn = $(e.target).closest('button');
@@ -95,23 +113,18 @@
                 dataType: 'JSON',
                 data: $(this).serialize(),
                 success: function (res) {
+                    console.log(res);
                     if (res.status == true) {
                         if (res.data.status == "Aktif") {
-                            Swal.fire({
-                                title: 'Berhasil!',
-                                text: res.message,
-                                icon: "success",
-                                showCancelButton: false,
-                                showConfirmButton: true,
-                                confirmButtonColor: "#35baf5",
-                                confirmButtonText: "Oke",
-                                closeOnConfirm: false,
-                                allowOutsideClick: false
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = '<?php echo base_url() ?>welcome'
-                                }
-                            })
+                            window.location.href = '<?php echo base_url() ?>welcome'
+                            //         Swal.fire({
+                            //             title: 'Berhasil!',
+                            //             text: res.message,
+                            //             icon: "success",
+                            //                timer: 3000,
+                            // showConfirmButton: false
+                            //         }).then((result) => {
+                            //         })
                         } else {
                             Swal.fire({
                                 title: 'Gagal!',

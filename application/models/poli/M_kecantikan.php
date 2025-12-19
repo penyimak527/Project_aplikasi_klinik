@@ -80,11 +80,11 @@ class M_kecantikan extends CI_Model
             $this->_process_rsp_pembayaran();
 
             if ($this->db->trans_status() === FALSE) {
-                throw new Exception("Gagal menyimpan data");
+                throw new Exception("Gagal menyimpan rekam medis.");
             }
 
             $this->db->trans_commit();
-            return ['status' => true, 'message' => 'Data berhasil disimpan'];
+            return ['status' => true, 'message' => 'Rekam medis berhasil disimpan.'];
 
         } catch (Exception $e) {
             $this->db->trans_rollback();
@@ -182,7 +182,7 @@ class M_kecantikan extends CI_Model
 
                 // Tambahkan ke tabel relasi
                 $this->db->insert('pol_kecantikan_tindakan', [
-                    'id_rm_kecantikan' => $id_pol_kecantikan,
+                    'id_pol_kecantikan' => $id_pol_kecantikan,
                     'id_tindakan' => $tindakan_id,
                     'tindakan' => $tindakan_baru[$i],
                     'harga' => $harga_baru_clean[$i]
@@ -195,7 +195,7 @@ class M_kecantikan extends CI_Model
         $harga_existing = $this->input->post('harga_tindakan') ?: [];
         $id_tindakan = $this->input->post('id_tindakan') ?: [];
 
-        $harga_exiting_clean = array_map([$this, '_clean_rupiah'], $harga_existing);
+        // $harga_exiting_clean = array_map([$this, '_clean_rupiah'], $harga_existing);
         foreach ($tindakan_existing as $index => $tindakan) {
             if (!empty(trim($tindakan))) {
                 $tindakan_id = $id_tindakan[$index] ?? null;
@@ -207,7 +207,7 @@ class M_kecantikan extends CI_Model
 
                     if ($tindakan_data) {
                         $this->db->insert('pol_kecantikan_tindakan', [
-                            'id_rm_kecantikan' => $id_pol_kecantikan,
+                            'id_pol_kecantikan' => $id_pol_kecantikan,
                             'id_tindakan' => $tindakan_id,
                             'tindakan' => $tindakan_data->nama,
                             'harga' =>$tindakan_data->harga
