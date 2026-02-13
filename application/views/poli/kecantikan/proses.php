@@ -316,23 +316,25 @@
 
     function pilihBarang(itemBase64) {
         const item = JSON.parse(atob(itemBase64));
-        const itemId = item.id_barang_detail.toString();
+        // const itemId = item.id_barang_detail.toString();
+        const itemId = item.id_barang.toString();
         const racikanId = $('#modalObat').data('target-racikan');
         if (racikanId) {
             // hanya cek obat dalam racikan ini saja!
-            let existingRacikanIds = $(`input[name^="racikan[${racikanId}]"][name$="[id]"]`)
+            let existingRacikanIds = $(`input[name^="racikan[${racikanId}]"][name$="[id_barang_br]"]`)
                 .map(function () {
                     return $(this).val().toString();
                 }).get();
-            if (existingRacikanIds.includes(itemId)) {
-                Swal.fire({
-                    icon: "warning",
+                
+                if (existingRacikanIds.includes(itemId)) {
+                    Swal.fire({
+                        icon: "warning",
                     title: "Peringatan!",
                     text: "Obat ini sudah ada dalam racikan ini!"
                 });
                 return;
             }
-
+            
             // Bila lolos, tambahkan ke racikan
             addRowToRacikan(normalize(item), racikanId);
 
@@ -341,11 +343,12 @@
             return;
         }
 
-        let existingObatIds = $(`input[name^="obat"][name$="[id_obat_detail_o]"]`)
-            .map(function () {
-                return $(this).val().toString();
-            }).get();
-
+        // let existingObatIds = $(`input[name^="obat"][name$="[id_obat_detail_o]"]`)
+        let existingObatIds = $(`input[name^="obat"][name$="[id_obat_o]"]`)
+        .map(function () {
+            return $(this).val().toString();
+        }).get();
+        
         if (existingObatIds.includes(itemId)) {
             Swal.fire({
                 icon: "warning",
@@ -354,7 +357,6 @@
             });
             return;
         }
-
         // Bila lolos, tambahkan ke obat biasa
         tambah_obat_rsp(normalize(item));
 
@@ -857,38 +859,72 @@
     }
 
     // UPDATE DROPDOWN DENGAN DATA ASLI DARI DATABASE
+    // function updateDropdownDenganDataAsli(satuanList, rowId, currentSatuanId) {
+    //     var row = $('#resep-row-' + rowId);
+    //     var selectElement = row.find('.select-satuan');
+    //     // Kosongkan dropdown
+    //     selectElement.empty();
+    //     // Tambahkan options baru dari data real
+    //     satuanList.forEach(function (satuan) {
+    //         var selected = satuan.id_barang_detail == currentSatuanId ? 'selected' : '';
+    //         var optionText = satuan.satuan_barang;
+    //         console.log(selected);
+    //         // Tambahkan info stok jika ada
+    //         // if (satuan.stok && satuan.stok > 0) {
+    //         //     optionText += ' (Stok: ' + satuan.stok + ')';
+    //         // }
+
+    //         selectElement.append(
+    //             $('<option>', {
+    //                 value: satuan.id_barang_detail,
+    //                 selected: selected,
+    //                 'data-harga-awal': satuan.harga_awal,
+    //                 'data-harga-jual': satuan.harga_jual,
+    //                 'data-laba': satuan.laba,
+    //                 // 'data-stok': satuan.stok || 0,
+    //                 'data-urutan': satuan.urutan_satuan,
+    //                 'data-satuan': satuan.satuan_barang,
+    //                 text: optionText
+    //             })
+    //         );
+    //     });
+
+    //     // console.log(' Dropdown updated dengan ' + satuanList.length + ' pilihan satuan');
+    // }
     function updateDropdownDenganDataAsli(satuanList, rowId, currentSatuanId) {
         var row = $('#resep-row-' + rowId);
         var selectElement = row.find('.select-satuan');
-        // Kosongkan dropdown
         selectElement.empty();
 
-        // Tambahkan options baru dari data real
-        satuanList.forEach(function (satuan) {
-            var selected = satuan.id_barang_detail == currentSatuanId ? 'selected' : '';
-            var optionText = satuan.satuan_barang;
-
-            // Tambahkan info stok jika ada
-            // if (satuan.stok && satuan.stok > 0) {
-            //     optionText += ' (Stok: ' + satuan.stok + ')';
-            // }
-
-            selectElement.append(
-                $('<option>', {
-                    value: satuan.id_barang_detail,
-                    selected: selected,
-                    'data-harga-awal': satuan.harga_awal,
-                    'data-harga-jual': satuan.harga_jual,
-                    'data-laba': satuan.laba,
-                    // 'data-stok': satuan.stok || 0,
-                    'data-urutan': satuan.urutan_satuan,
-                    'data-satuan': satuan.satuan_barang,
-                    text: optionText
-                })
-            );
+        const sorted = [...satuanList].sort((a, b) => {
+            return Number(a.urutan_satuan) - Number(b.urutan_satuan);
         });
 
-        // console.log(' Dropdown updated dengan ' + satuanList.length + ' pilihan satuan');
+        const found = sorted.find(x => String(x.id_barang_detail) === String(currentSatuanId));
+        const selectedId = found ? found.id_barang_detail : (sorted[0]?.id_barang_detail ?? null);
+
+        sorted.forEach(function (satuan) {
+            const opt = $('<option>', {
+                value: satuan.id_barang_detail,
+                'data-harga-awal': satuan.harga_awal,
+                'data-harga-jual': satuan.harga_jual,
+                'data-laba': satuan.laba,
+                'data-urutan': satuan.urutan_satuan,
+                'data-satuan': satuan.satuan_barang,
+                text: satuan.satuan_barang
+            });
+
+            if (String(satuan.id_barang_detail) === String(selectedId)) {
+                opt.prop('selected', true);
+            }
+
+            selectElement.append(opt);
+        });
+
+
+        //   selectElement.trigger('change');
+
+        //   console.log('Dropdown updated:', { rowId, currentSatuanId, selectedId, total: sorted.length });
     }
 
     // FUNCTION UNTUK UBAH SATUAN (VERSI FINAL)
@@ -922,8 +958,6 @@
     // UPDATE ROW DENGAN DATA BARU DARI SERVER
     function updateRowWithNewSatuanobat(rowId, satuanData) {
         var row = $('#resep-row-' + rowId);
-
-        // console.log(' Update row dengan data baru:', satuanData);
 
         // Update semua field dengan data baru
         row.find('.id-barang-detail').val(satuanData.id_barang_detail);
@@ -1852,7 +1886,8 @@
                                                         </td>
                                                         <td>
                                                             <button type="button" class="btn btn-sm btn-danger"
-                                                                onclick="$(this).closest('tr').remove()"><i class="far fa-trash-alt"></i></button>
+                                                                onclick="$(this).closest('tr').remove()"><i
+                                                                    class="far fa-trash-alt"></i></button>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -1904,7 +1939,8 @@
                                                         </td>
                                                         <td>
                                                             <button type="button" class="btn btn-sm btn-danger"
-                                                                onclick="$(this).closest('tr').remove(); hitungTotalTindakan()"><i class="far fa-trash-alt"></i></button>
+                                                                onclick="$(this).closest('tr').remove(); hitungTotalTindakan()"><i
+                                                                    class="far fa-trash-alt"></i></button>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -2035,8 +2071,10 @@
                                             <?php $rc = 0;
                                             $maxRc = 0; ?>
 
-                                            <?php if (!empty($racikan_terisi)):?>
-                                                <?php foreach ($racikan_terisi as $r):$rc++; $maxRc = $rc;?>
+                                            <?php if (!empty($racikan_terisi)): ?>
+                                                <?php foreach ($racikan_terisi as $r):
+                                                    $rc++;
+                                                    $maxRc = $rc; ?>
                                                     <div class="racikan-card card border mb-3" id="racikan-<?= $rc ?>">
                                                         <div class="card-body">
 
@@ -2101,7 +2139,7 @@
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody id="racikan-obat-<?= $rc ?>">
-                                                                        <?php $ob = 0;?>
+                                                                        <?php $ob = 0; ?>
                                                                         <?php foreach (($r['obat'] ?? []) as $d):
                                                                             $ob++; ?>
                                                                             <tr id="racikan-obat-row-<?= $rc ?>-<?= $ob ?>">

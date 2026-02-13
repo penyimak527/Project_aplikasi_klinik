@@ -631,7 +631,6 @@ class M_kecantikan extends CI_Model
             $this->db->or_like('asb.nama_satuan', $cari);
             $this->db->group_end();
         }
-
         $this->db->order_by('ab.nama_barang', 'ASC');
 
         return $this->db->get()->result();
@@ -659,7 +658,7 @@ class M_kecantikan extends CI_Model
         $this->db->join('apt_satuan_barang asb', 'asb.id = abd.id_satuan_barang');
         $this->db->join('apt_stok ast', 'ast.id_barang_detail = abd.id', 'left');
         $this->db->where('abd.id_barang', $id_barang);
-        $this->db->order_by('abd.urutan_satuan', 'DESC'); // Urut dari terbesar ke terkecil
+        $this->db->order_by('abd.urutan_satuan', 'ASC'); 
 
         return $this->db->get()->result_array();
     }
@@ -686,7 +685,7 @@ class M_kecantikan extends CI_Model
         $this->db->join('apt_satuan_barang asb', 'asb.id = abd.id_satuan_barang');
         $this->db->join('apt_stok ast', 'ast.id_barang_detail = abd.id', 'left');
         $this->db->where('abd.id', $id_barang_detail);
-
+        $this->db->order_by('abd.urutan_satuan', 'ASC');
         return $this->db->get()->row_array();
     }
 }

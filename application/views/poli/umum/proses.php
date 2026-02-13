@@ -84,39 +84,56 @@
         });
         hitungTotalTindakan();
         initSelectedFromExistingRows();
+        initSelectedObatFromExisting();
     })
-function initSelectedFromExistingRows() {
-  // ===== TINDAKAN =====
-  $('#table_tindakan tbody tr').each(function () {
-    const $tr = $(this);
+    function initSelectedFromExistingRows() {
+        // ===== TINDAKAN =====
+        $('#table_tindakan tbody tr').each(function () {
+            const $tr = $(this);
 
-    // Dari modal (punya hidden id_tindakan)
-    const idT = $tr.find('input[name="tindakan_modal[id_tindakan][]"]').val();
-    if (idT) selectedTindakanIds.add(Number(idT));
+            // Dari modal (punya hidden id_tindakan)
+            const idT = $tr.find('input[name="tindakan_modal[id_tindakan][]"]').val();
+            if (idT) selectedTindakanIds.add(Number(idT));
 
-    // Dari manual (punya nama)
-    const namaT = $tr.find('input[name="tindakan_manual[nama][]"]').val();
-    if (namaT) selectedTindakanManual.add(namaT.toLowerCase().trim());
-  });
+            // Dari manual (punya nama)
+            const namaT = $tr.find('input[name="tindakan_manual[nama][]"]').val();
+            if (namaT) selectedTindakanManual.add(namaT.toLowerCase().trim());
+        });
 
-  // ===== DIAGNOSA =====
-  $('#table_diagnosa tbody tr').each(function () {
-    const $tr = $(this);
+        // ===== DIAGNOSA =====
+        $('#table_diagnosa tbody tr').each(function () {
+            const $tr = $(this);
 
-    // Dari modal (punya hidden id_diagnosa)
-    const idD = $tr.find('input[name="diagnosa_modal[id_diagnosa][]"]').val();
-    if (idD) selectedDiagnosaIds.add(Number(idD));
+            // Dari modal (punya hidden id_diagnosa)
+            const idD = $tr.find('input[name="diagnosa_modal[id_diagnosa][]"]').val();
+            if (idD) selectedDiagnosaIds.add(Number(idD));
 
-    // Dari manual (punya nama)
-    const namaD = $tr.find('input[name="diagnosa_manual[nama][]"]').val();
-    if (namaD) selectedDiagnosaManual.add(namaD.toLowerCase().trim());
-  });
+            // Dari manual (punya nama)
+            const namaD = $tr.find('input[name="diagnosa_manual[nama][]"]').val();
+            if (namaD) selectedDiagnosaManual.add(namaD.toLowerCase().trim());
+        });
+    }
 
-//   console.log('INIT tindakan IDs:', [...selectedTindakanIds]);
-//   console.log('INIT tindakan manual:', [...selectedTindakanManual]);
-//   console.log('INIT diagnosa IDs:', [...selectedDiagnosaIds]);
-//   console.log('INIT diagnosa manual:', [...selectedDiagnosaManual]);
-}
+    function initSelectedObatFromExisting() {
+        // ===== OBAT BIASA (table_resep) =====
+        $('#table_resep tbody tr').each(function () {
+            const idBarang = $(this).find('input[name*="[id_obat_o]"]').val();
+            if (idBarang) selectedObatBiasaIds.add(String(idBarang));
+        });
+
+        // ===== OBAT RACIKAN (tiap racikan-obat-{rc}) =====
+        $('[id^="racikan-obat-"]').each(function () {
+            const racikanId = this.id.replace('racikan-obat-', ''); // contoh: "1","2"
+            $(this).find('tr').each(function () {
+                const idBarang = $(this).find('input[name*="[id_barang_br]"]').val();
+                if (idBarang) selectedObatRacikanIds.add(String(idBarang) + '-' + String(racikanId));
+            });
+        });
+
+        console.log('INIT obat biasa:', Array.from(selectedObatBiasaIds));
+        console.log('INIT obat racikan:', Array.from(selectedObatRacikanIds));
+    }
+
 
     // var global
     let selectedObatBiasaIds = new Set(); // Untuk obat biasa
@@ -394,7 +411,17 @@ function initSelectedFromExistingRows() {
 
             if (racikanId) {
                 // Untuk racikan
-                if (selectedObatRacikanIds.has(item.id_barang)) {
+                // if (selectedObatRacikanIds.has(item.id_barang)) {
+                //     Swal.fire({
+                //         title: 'Obat Sudah Dipilih di Racikan!',
+                //         text: `Obat "${item.nama_barang}" sudah ada di racikan ini.`,
+                //         icon: 'warning',
+                //         confirmButtonColor: '#3085d6',
+                //         confirmButtonText: 'Oke'
+                //     });
+                //     return;
+                // }
+                if (selectedObatRacikanIds.has(String(item.id_barang) + '-' + String(racikanId))) {
                     Swal.fire({
                         title: 'Obat Sudah Dipilih di Racikan!',
                         text: `Obat "${item.nama_barang}" sudah ada di racikan ini.`,
@@ -404,6 +431,7 @@ function initSelectedFromExistingRows() {
                     });
                     return;
                 }
+
                 addRowToRacikan(item, racikanId, satuanData);
 
             } else {
@@ -986,42 +1014,42 @@ function initSelectedFromExistingRows() {
 
     //     hitungTotal();
     // }
-function hitungSubtotalWithConversion(rowId) {
-    const row = $(`#resep-row-${rowId}`);
-    const jumlah = parseFloat(row.find('.jumlah').val()) || 0;
+    function hitungSubtotalWithConversion(rowId) {
+        const row = $(`#resep-row-${rowId}`);
+        const jumlah = parseFloat(row.find('.jumlah').val()) || 0;
 
-    // nilai per unit (murni)
-    const hargaAwalSatuan = parseFloat(row.find('.harga-awal-satuan').val()) || 0;
-    const hargaJualSatuan = parseFloat(row.find('.harga-jual-satuan').val()) || 0;
-    const labaSatuan      = parseFloat(row.find('.laba-satuan').val()) || 0;
+        // nilai per unit (murni)
+        const hargaAwalSatuan = parseFloat(row.find('.harga-awal-satuan').val()) || 0;
+        const hargaJualSatuan = parseFloat(row.find('.harga-jual-satuan').val()) || 0;
+        const labaSatuan = parseFloat(row.find('.laba-satuan').val()) || 0;
 
-    // total (yang boleh berubah hanya subtotal)
-    const totalHargaAwal = jumlah * hargaAwalSatuan;
-    const totalHargaJual = jumlah * hargaJualSatuan;
-    const totalLaba      = jumlah * labaSatuan;
+        // total (yang boleh berubah hanya subtotal)
+        const totalHargaAwal = jumlah * hargaAwalSatuan;
+        const totalHargaJual = jumlah * hargaJualSatuan;
+        const totalLaba = jumlah * labaSatuan;
 
-    // ✅ UI: harga & laba tetap PER UNIT
-    row.find('.harga').val(formatRupiah(hargaAwalSatuan));
-    row.find('.laba').val(formatRupiah(labaSatuan));
+        // ✅ UI: harga & laba tetap PER UNIT
+        row.find('.harga').val(formatRupiah(hargaAwalSatuan));
+        row.find('.laba').val(formatRupiah(labaSatuan));
 
-    // ✅ UI: subtotal (total jual) berubah sesuai jumlah
-    row.find('.subtotall').val(formatRupiah(totalHargaJual));
+        // ✅ UI: subtotal (total jual) berubah sesuai jumlah
+        row.find('.subtotall').val(formatRupiah(totalHargaJual));
 
-    // ✅ Hidden untuk backend:
-    // - unit
-    row.find('.harga-unit').val(hargaAwalSatuan);
-    row.find('.laba-unit').val(labaSatuan);
+        // ✅ Hidden untuk backend:
+        // - unit
+        row.find('.harga-unit').val(hargaAwalSatuan);
+        row.find('.laba-unit').val(labaSatuan);
 
-    // - subtotal
-    row.find('.subtotal').val(totalHargaAwal);        // subtotal harga awal
-    row.find('[name^="obat["][name$="[subtotal_ol]"]').val(totalHargaJual); // subtotal jual (kalau ada)
-    row.find('.sub-total-laba').val(totalLaba);       // subtotal laba
+        // - subtotal
+        row.find('.subtotal').val(totalHargaAwal);        // subtotal harga awal
+        row.find('[name^="obat["][name$="[subtotal_ol]"]').val(totalHargaJual); // subtotal jual (kalau ada)
+        row.find('.sub-total-laba').val(totalLaba);       // subtotal laba
 
-    // kalau kamu pakai harga_jual_o sebagai UNIT jual, set unit:
-    row.find('.harga_jual').val(hargaJualSatuan);
+        // kalau kamu pakai harga_jual_o sebagai UNIT jual, set unit:
+        row.find('.harga_jual').val(hargaJualSatuan);
 
-    hitungTotal();
-}
+        hitungTotal();
+    }
 
 
     // Update fungsi hitungTotal untuk handle konversi
@@ -1572,37 +1600,37 @@ function hitungSubtotalWithConversion(rowId) {
     // }
 
     function hitungSubtotalRacikan(racikanId, rowId) {
-    const row = $(`#racikan-obat-row-${racikanId}-${rowId}`);
+        const row = $(`#racikan-obat-row-${racikanId}-${rowId}`);
 
-    const jumlah = parseFloat(row.find('.jumlah-racikan').val()) || 0;
+        const jumlah = parseFloat(row.find('.jumlah-racikan').val()) || 0;
 
-    // per unit (murni)
-    const hargaAwalSatuan = parseFloat(row.find('.harga-awal-satuan-racikan').val()) || 0;
-    const hargaJualSatuan = parseFloat(row.find('.harga-jual-satuan-racikan').val()) || 0;
-    const labaSatuan      = parseFloat(row.find('.laba-satuan-racikan').val()) || 0;
+        // per unit (murni)
+        const hargaAwalSatuan = parseFloat(row.find('.harga-awal-satuan-racikan').val()) || 0;
+        const hargaJualSatuan = parseFloat(row.find('.harga-jual-satuan-racikan').val()) || 0;
+        const labaSatuan = parseFloat(row.find('.laba-satuan-racikan').val()) || 0;
 
-    // subtotal (total)
-    const subtotalHargaAwal = jumlah * hargaAwalSatuan;
-    const subtotalHargaJual = jumlah * hargaJualSatuan;
-    const subtotalLaba      = jumlah * labaSatuan;
+        // subtotal (total)
+        const subtotalHargaAwal = jumlah * hargaAwalSatuan;
+        const subtotalHargaJual = jumlah * hargaJualSatuan;
+        const subtotalLaba = jumlah * labaSatuan;
 
-    // ✅ harga & laba tetap PER UNIT (display + hidden unit)
-    row.find('.harga-racikan').val(hargaAwalSatuan);              // harga_br (unit)
-    row.find('.laba-racikan').val(labaSatuan);                    // laba_br (unit)
-    row.find('.harga-racikan-display').val(formatRupiah(hargaAwalSatuan));
-    row.find('.laba-racikan-display').val(formatRupiah(labaSatuan));
+        // ✅ harga & laba tetap PER UNIT (display + hidden unit)
+        row.find('.harga-racikan').val(hargaAwalSatuan);              // harga_br (unit)
+        row.find('.laba-racikan').val(labaSatuan);                    // laba_br (unit)
+        row.find('.harga-racikan-display').val(formatRupiah(hargaAwalSatuan));
+        row.find('.laba-racikan-display').val(formatRupiah(labaSatuan));
 
-    // ✅ yang berubah cuma subtotal
-    row.find('.subtotal-racikan').val(subtotalHargaAwal);         // subtotal_br (total)
-    row.find('.subtotal-racikanl').val(subtotalHargaJual);        // subtotal_brl (total)
-    row.find('.subtotallaba-racikan').val(subtotalLaba);          // subtotal_laba_br (total)
-    row.find('.harga-jracikan').val(hargaJualSatuan);             // kalau ini UNIT jual (lebih konsisten)
+        // ✅ yang berubah cuma subtotal
+        row.find('.subtotal-racikan').val(subtotalHargaAwal);         // subtotal_br (total)
+        row.find('.subtotal-racikanl').val(subtotalHargaJual);        // subtotal_brl (total)
+        row.find('.subtotallaba-racikan').val(subtotalLaba);          // subtotal_laba_br (total)
+        row.find('.harga-jracikan').val(hargaJualSatuan);             // kalau ini UNIT jual (lebih konsisten)
 
-    row.find('.subtotal-racikanl-display').val(formatRupiah(subtotalHargaJual));
+        row.find('.subtotal-racikanl-display').val(formatRupiah(subtotalHargaJual));
 
-    hitungTotalRacikan(racikanId);
-    hitungTotal();
-}
+        hitungTotalRacikan(racikanId);
+        hitungTotal();
+    }
 
 
     function hitungTotalRacikan(racikanId) {
@@ -1961,9 +1989,9 @@ function hitungSubtotalWithConversion(rowId) {
                                                         <th class="text-center" width="5%">Aksi</th>
                                                     </tr>
                                                 </thead>
-                                                 <tbody>
+                                                <tbody>
                                                     <?php $no = 0; ?>
-                                                    <?php if (!empty($obat_terisi)):?>
+                                                    <?php if (!empty($obat_terisi)): ?>
                                                         <?php foreach ($obat_terisi as $o):
                                                             $no++; ?>
                                                             <tr id="resep-row-<?= $no ?>">
@@ -2056,12 +2084,13 @@ function hitungSubtotalWithConversion(rowId) {
                                             <i class="fas fa-plus me-2"></i>Tambah Racikan
                                         </button>
                                         <!-- <div id="racikan_container"></div> -->
-                                         <div id="racikan_container">
+                                        <div id="racikan_container">
                                             <?php $rc = 0;
                                             $maxRc = 0; ?>
-                                            <?php if (!empty($racikan_terisi)):?>
+                                            <?php if (!empty($racikan_terisi)): ?>
                                                 <?php foreach ($racikan_terisi as $r):
-                                                    $rc++; $maxRc = $rc;?>
+                                                    $rc++;
+                                                    $maxRc = $rc; ?>
                                                     <div class="racikan-card card border mb-3" id="racikan-<?= $rc ?>">
                                                         <div class="card-body">
 
@@ -2448,4 +2477,3 @@ function hitungSubtotalWithConversion(rowId) {
 <script>
     racikanCounter = <?= (int) $maxRc ?>;
 </script>
-
