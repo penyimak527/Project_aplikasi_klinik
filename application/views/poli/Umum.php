@@ -111,8 +111,7 @@
                   </ol>
               </div>
               <h4 class="page-title"><php echo $title; ?></h4> -->
-<!-- </div> -->
-<!--end page-title-box-->
+<!-- </div>end page-title-box -->
 <!-- </div> -->
 <!--end col-->
 <!-- </div> -->
@@ -147,10 +146,8 @@
                     </thead>
                     <tbody>
                     </tbody> -->
-<!-- </table> -->
-<!--end /table-->
-<!-- </div> -->
-<!--end /tableresponsive-->
+<!-- </table>end /table -->
+<!-- </div>end /tableresponsive -->
 <!-- <div class="row mt-3">
               <div class="col-sm-6">
                 <div id="pagination"></div>
@@ -176,4 +173,4 @@
 </div>
 </div>
 </div> -->
-  <h2>Poli Kecantikan</h2>
+  <h2>Poli Umum</h2>

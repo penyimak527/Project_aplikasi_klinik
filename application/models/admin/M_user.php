@@ -8,8 +8,7 @@ class M_user extends CI_Model
         $params = [];
 
         if ($cari != '') {
-            $sql .= " AND (a.nama_pegawai LIKE ? OR a.username LIKE ? OR a.nama_level LIKE ? a.nama_hak_akses LIKE ? OR a.status LIKE ?)";
-            $params[] = "%$cari%";
+            $sql .= " AND (a.nama_pegawai LIKE ? OR a.username LIKE ? OR a.nama_level LIKE ? OR a.status LIKE ?)";
             $params[] = "%$cari%";
             $params[] = "%$cari%";
             $params[] = "%$cari%";

@@ -113,7 +113,6 @@
                 dataType: 'JSON',
                 data: $(this).serialize(),
                 success: function (res) {
-                    console.log(res);
                     if (res.status == true) {
                         if (res.data.status == "Aktif") {
                             window.location.href = '<?php echo base_url() ?>welcome'

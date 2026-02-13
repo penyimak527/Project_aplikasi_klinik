@@ -272,6 +272,7 @@ $nama_level = $ci->session->userdata('nama_level');
         });
       },
       success: function (data) {
+        console.log(data);
         Swal.close();
         if (data.status == 'ada') {
           Swal.fire({
@@ -288,11 +289,14 @@ $nama_level = $ci->session->userdata('nama_level');
               let id_polidata = data.id_poli_datas;
                 if (id_poli == 16) {
                 window.location.href =
-                  "<?php echo base_url() ?>poli/kecantikan/view_proses/" +
+                  "<?php echo base_url() ?>poli/kecantikan/tampilan_proses/" +
                   kode_invoice;
               } else if (id_poli == 15) {
                 window.location.href =
                   `<?php echo base_url('poli/gigi/view_proses/'); ?>${id_polidata}`;
+              }else if (id_poli == 14) {
+                window.location.href =
+                  `<?php echo base_url('poli/umum/view_proses/'); ?>${kode_invoice}`;
               }
               else {
                 get_data();
@@ -443,6 +447,9 @@ $nama_level = $ci->session->userdata('nama_level');
               } else if (id_poli == 15) {
                 window.location.href =
                   `<?php echo base_url('poli/gigi/proses/'); ?>${kode_invoice}`;
+              } else if (id_poli == 14) {
+                window.location.href =
+                  `<?php echo base_url('poli/umum/view_proses/'); ?>${kode_invoice}`;
               }
               else {
                 get_data();

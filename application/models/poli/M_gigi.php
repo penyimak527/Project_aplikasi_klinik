@@ -31,6 +31,7 @@ class M_gigi extends CI_Model
         }
 
         $this->db->group_by('d.id_barang, d.nama_barang');
+        $this->db->order_by('d.nama_barang', 'ASC');
         return $this->db->get()->result();
     }
 

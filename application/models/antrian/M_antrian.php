@@ -364,7 +364,7 @@ class M_antrian extends CI_Model
         if ($id_pegawai) {
             $dokter = $this->db->get_where('kpg_dokter', ['id_pegawai' => $id_pegawai])->row();
             if ($dokter) {
-                if ($dokter->id_pegawai === $id_pegawai) {
+                if ((int)$dokter->id_pegawai === (int)$id_pegawai) {
                     $this->db->select('*');
                     $this->db->from('mst_poli');
                     $this->db->where('id', $dokter->id_poli);

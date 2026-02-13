@@ -5,7 +5,7 @@ class Kecantikan extends CI_Controller
     {
         parent::__construct();
         date_default_timezone_set('Asia/Jakarta');
-          if($this->session->userdata('username') == null) {
+        if ($this->session->userdata('username') == null) {
             redirect('login/login');
         }
         $this->load->model('poli/m_kecantikan', 'model');
@@ -22,11 +22,40 @@ class Kecantikan extends CI_Controller
         $this->load->view('templates/footer');
     }
 
+    public function tampilan_proses($kode_invoice)
+    {
+        $data['row'] = $this->model->row_datakode($kode_invoice);
+        if (!$data['row']) {
+            show_404(); // atau redirect ke antrian
+            return;
+        }
+
+        $id_pol = $data['row']['id'];
+
+        $data['diagnosa_terisi'] = $this->model->get_diagnosa_terisi($id_pol);
+        $data['tindakan_terisi'] = $this->model->get_tindakan_terisi($id_pol);
+        $resep = $this->model->get_resep_header_by_invoice($kode_invoice);
+
+        $data['resep_header'] = $resep;
+        $data['obat_terisi'] = [];
+        $data['racikan_terisi'] = [];
+
+        if ($resep) {
+            $data['obat_terisi'] = $this->model->get_resep_obat($resep['id']);
+            $data['racikan_terisi'] = $this->model->get_resep_racikan($resep['id']);
+        }
+
+        $data['active'] = 'Poli';
+        $data['title'] = ' Poli Kecantikan';
+
+        $this->load->view('templates/header', $data);
+        $this->load->view('poli/kecantikan/proses', $data);
+        $this->load->view('templates/footer');
+    }
     public function view_proses($kode_invoice)
     {
 
         $data['row'] = $this->model->row_datakode($kode_invoice);
-        $data['racikan'] = $this->model->racikan();
         $data['active'] = 'Poli';
         $data['title'] = ' Poli Kecantikan';
 
@@ -102,10 +131,10 @@ class Kecantikan extends CI_Controller
             'data' => $data
         ]);
     }
- public function get_satuan_by_barang($id_barang)
+    public function get_satuan_by_barang($id_barang)
     {
         $data = $this->model->get_all_satuan_by_barang($id_barang);
-        
+
         if ($data) {
             echo json_encode([
                 'status' => true,
@@ -122,7 +151,7 @@ class Kecantikan extends CI_Controller
     public function get_satuan_detail($id_barang_detail)
     {
         $data = $this->model->get_satuan_by_id($id_barang_detail);
-        
+
         if ($data) {
             echo json_encode([
                 'status' => true,
@@ -138,6 +167,3 @@ class Kecantikan extends CI_Controller
 }
 
 ?>
-
-
-

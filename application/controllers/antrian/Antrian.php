@@ -5,9 +5,9 @@ class Antrian extends CI_Controller
   {
     parent::__construct();
     date_default_timezone_set('Asia/Jakarta');
-      if($this->session->userdata('username') == null) {
-            redirect('login/login');
-        }
+    if ($this->session->userdata('username') == null) {
+      redirect('login/login');
+    }
     $this->load->model('antrian/m_antrian', 'model');
   }
   public function index()
@@ -73,7 +73,7 @@ class Antrian extends CI_Controller
       ->_display();
     exit;
   }
-  
+
 
   public function dokter()
   {
@@ -121,7 +121,8 @@ class Antrian extends CI_Controller
       ->_display();
     exit;
   }
-  public function selectp(){
+  public function selectp()
+  {
     $data = $this->model->selectp();
 
     if ($data) {
@@ -144,7 +145,7 @@ class Antrian extends CI_Controller
     exit;
   }
 
-   public function cek_btn()
+  public function cek_btn()
   {
     $response = $this->model->cek_status();
 
@@ -155,7 +156,7 @@ class Antrian extends CI_Controller
       ->_display();
     exit;
   }
-   public function cek_konfirmasi()
+  public function cek_konfirmasi()
   {
     $response = $this->model->cek_konfirmasi();
 

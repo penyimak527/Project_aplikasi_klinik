@@ -1,38 +1,16 @@
-<style>
-    .dropify-wrapper {
-        height: 170px !important;
-        width: 100% !important;
-    }
-
-    .dropify-render img {
-        object-fit: contain !important;
-        width: 100% !important;
-        height: 100% !important;
-    }
-</style>
 <script>
     $(document).ready(function () {
-        $('.dropify_lama').dropify({
-            messages: {
-                'default': 'Drag dan drop gambar kesini',
-                'replace': 'Drag dan drop gambar kesini atau klik untuk mengganti gambar',
-                'remove': 'Hapus',
-                'error': 'Ooops, Terjadi kesalahan. Silahkan coba lagi.'
-            }
-        });
-        $('.dropify').dropify({
-            messages: {
-                'default': 'Drag dan drop gambar kesini',
-                'replace': 'Drag dan drop gambar kesini atau klik untuk mengganti gambar',
-                'remove': 'Hapus',
-                'error': 'Ooops, Terjadi kesalahan. Silahkan coba lagi.'
-            }
-        });
         formatAllCurrencyInputs();
         // Event untuk input yang ditambahkan nanti
         $(document).on('keyup', '.input_htindakan', function () {
             FormatCurrency1(this);
         });
+
+        // Event untuk input harga tindakan manual SEBELUM ditambahkan ke tabel
+        $(document).on('keyup', '#harga_tindakan', function () {
+            FormatCurrency(this);
+        });
+
         $('#btn-tindakan').on('click', function () {
             $('#tab-tindakan').show();
             $('#tab-obat').hide();
@@ -41,6 +19,7 @@
             $('#tab-obat').show();
             $('#tab-tindakan').hide();
         });
+
         cariBarang();
         // satuan();
         $('#pagination1, #pagination2, #pagination').on('click', function (e) {
@@ -55,36 +34,128 @@
         $("#jumlah_tampil2").change(function () {
             cariBarang();
         });
-        getgambar();
-        // hitungSubtotal();
+
+
+        // Hapus event listener lama dan ganti dengan yang lebih sederhana
+        $(document).on('click', '.btn-hapus-tindakan', function () {
+            const row = $(this).closest('tr');
+
+            // Ambil ID atau nama dari input hidden
+            const idInput = row.find('input[name*="[id_tindakan]"]');
+            const namaInput = row.find('input[name*="[nama]"]');
+
+            if (idInput.length > 0) {
+                // Ini dari modal (ada ID)
+                const id = idInput.val();
+                console.log('Hapus tindakan modal dengan ID:', id);
+                selectedTindakanIds.delete(parseInt(id));
+            } else if (namaInput.length > 0) {
+                // Ini dari manual (hanya nama)
+                const nama = namaInput.val().toLowerCase();
+                console.log('Hapus tindakan manual dengan nama:', nama);
+                selectedTindakanManual.delete(nama);
+            }
+
+            row.remove();
+            hitungTotalTindakan();
+        });
+
+        // Untuk diagnosa
+        $(document).on('click', '.btn-hapus-diagnosa', function () {
+            const row = $(this).closest('tr');
+
+            // Ambil ID atau nama dari input hidden
+            const idInput = row.find('input[name*="[id_diagnosa]"]');
+            const namaInput = row.find('input[name*="[nama]"]');
+
+            if (idInput.length > 0) {
+                // Ini dari modal (ada ID)
+                const id = idInput.val();
+                console.log('Hapus diagnosa modal dengan ID:', id);
+                selectedDiagnosaIds.delete(parseInt(id));
+            } else if (namaInput.length > 0) {
+                // Ini dari manual (hanya nama)
+                const nama = namaInput.val().toLowerCase();
+                console.log('Hapus diagnosa manual dengan nama:', nama);
+                selectedDiagnosaManual.delete(nama);
+            }
+
+            row.remove();
+        });
         hitungTotalTindakan();
-        hitungTotal();
+        initSelectedFromExistingRows();
     })
+function initSelectedFromExistingRows() {
+  // ===== TINDAKAN =====
+  $('#table_tindakan tbody tr').each(function () {
+    const $tr = $(this);
+
+    // Dari modal (punya hidden id_tindakan)
+    const idT = $tr.find('input[name="tindakan_modal[id_tindakan][]"]').val();
+    if (idT) selectedTindakanIds.add(Number(idT));
+
+    // Dari manual (punya nama)
+    const namaT = $tr.find('input[name="tindakan_manual[nama][]"]').val();
+    if (namaT) selectedTindakanManual.add(namaT.toLowerCase().trim());
+  });
+
+  // ===== DIAGNOSA =====
+  $('#table_diagnosa tbody tr').each(function () {
+    const $tr = $(this);
+
+    // Dari modal (punya hidden id_diagnosa)
+    const idD = $tr.find('input[name="diagnosa_modal[id_diagnosa][]"]').val();
+    if (idD) selectedDiagnosaIds.add(Number(idD));
+
+    // Dari manual (punya nama)
+    const namaD = $tr.find('input[name="diagnosa_manual[nama][]"]').val();
+    if (namaD) selectedDiagnosaManual.add(namaD.toLowerCase().trim());
+  });
+
+//   console.log('INIT tindakan IDs:', [...selectedTindakanIds]);
+//   console.log('INIT tindakan manual:', [...selectedTindakanManual]);
+//   console.log('INIT diagnosa IDs:', [...selectedDiagnosaIds]);
+//   console.log('INIT diagnosa manual:', [...selectedDiagnosaManual]);
+}
+
+    // var global
+    let selectedObatBiasaIds = new Set(); // Untuk obat biasa
+    let selectedObatRacikanIds = new Set(); // Untuk obat racikan
+
+    let selectedTindakanIds = new Set(); // Untuk tracking ID tindakan
+    let selectedDiagnosaIds = new Set(); // Untuk tracking ID diagnosa
+    let selectedTindakanManual = new Set(); // Untuk tracking nama tindakan manual
+    let selectedDiagnosaManual = new Set(); // Untuk tracking nama diagnosa manual
+
+    // Global variable untuk menyimpan data satuan
+    let obatSatuanData = {};
+
     function formatDataBeforeSubmit() {
-        // Format data obat
+        // Format data obat - HAPUS FORMATTING HANYA DARI FIELD YANG TAMPIL
         $('[name^="obat["]').each(function () {
+            // Hanya bersihkan field yang TIDAK hidden dan TAMPIL DI UI
             if ($(this).attr('type') !== 'hidden' &&
                 ($(this).hasClass('harga') ||
                     $(this).hasClass('laba') ||
-                    $(this).hasClass('subtotal') ||
-                    $(this).hasClass('sub-total-laba'))) {
+                    $(this).hasClass('subtotall'))) {
                 let val = $(this).val().replace(/[^0-9]/g, '');
                 $(this).val(val);
             }
         });
 
-        // Format data racikan
+        // Format data racikan - HAPUS FORMATTING HANYA DARI FIELD YANG TAMPIL
         $('[name^="racikan["]').each(function () {
+            // Hanya bersihkan field yang TIDAK hidden
             if ($(this).attr('type') !== 'hidden' &&
-                ($(this).hasClass('harga-racikan') ||
-                    $(this).hasClass('laba-racikan') ||
-                    $(this).hasClass('subtotal-racikan') ||
-                    $(this).hasClass('subtotallaba-racikan'))) {
+                ($(this).hasClass('harga-racikan-display') ||
+                    $(this).hasClass('laba-racikan-display') ||
+                    $(this).hasClass('subtotal-racikanl-display'))) {
                 let val = $(this).val().replace(/[^0-9]/g, '');
                 $(this).val(val);
             }
         });
     }
+
 
     // Panggil fungsi ini sebelum submit
     $('#form_tambah').on('submit', function () {
@@ -111,19 +182,18 @@
         }
         return isValid;
     }
-
+    // function tambah data 
     function tambah(e) {
-        let btn = $(e.target).closest('button');
         e.preventDefault();
-        btn.prop("disabled", true).text("Mengirim...");
         if (!validateForm('#form_tambah')) {
-            btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
             return;
         }
+
         const formData = new FormData($('#form_tambah')[0]);
         $.ajax({
-            url: '<?php echo base_url("poli/kecantikan/tambah_proses") ?>',
+            url: '<?php echo base_url("poli/umum/tambah_proses") ?>',
             method: 'POST',
+            // data : $('#form_tambah').serialize(),
             data: formData,
             processData: false,
             contentType: false,
@@ -140,6 +210,7 @@
                 });
             },
             success: function (res, status) {
+                console.log(res, status);
                 if (res.status == true) {
                     Swal.fire({
                         title: 'Berhasil!',
@@ -168,8 +239,8 @@
                         closeOnConfirm: false,
                         allowOutsideClick: false
                     }).then((result) => {
-                        btn.prop("disabled", false).html('<i class="fas fa-save me-2"></i>Simpan');
                         if (result.isConfirmed) {
+                            //   location.reload()
                             console.log('Gagal mengirim datanya');
                         }
                     })
@@ -177,46 +248,207 @@
             },
         });
     }
-    function getgambar() {
-        var imgUrl = "<?= base_url('upload/' . $row['foto']) ?>";
-        let drEvent = $('#dropify_lama').data('dropify');
-        if (!drEvent) return;
-        drEvent.settings.defaultFile = imgUrl;
-        drEvent.destroy();
-        drEvent.init();
-    }
-    function cariDiagnosa(keyword) {
-        let count_headerd = $(`#table-data1 thead tr th`).length;
+
+    function cariTindakan(keyword) {
         $.ajax({
-            url: '<?= base_url("poli/kecantikan/diagnosa") ?>',
-            data: { caridiagnosa: keyword },
+            url: '<?= base_url("poli/umum/tindakan") ?>',
+            data: {
+                carit: keyword,
+            },
             type: 'POST',
             dataType: 'JSON',
-            beforeSend: () => {
-                let loading = `<tr id="tr-loading">
-                                    <td colspan="${count_headerd}" class="text-center">
-                                        <div class="loader">
-                                            <img src="<?php echo base_url(); ?>assets/loading-table.gif" width="60" alt="loading">
-                                        </div>
-                                    </td>
-                                </tr>`;
-
-                $(`#table-data1 tbody`).html(loading);
+            success: function (res) {
+                let table = "";
+                if (res.status && res.data.length > 0) {
+                    let i = 1;
+                    for (const item of res.data) {
+                        table += `
+                <tr style="cursor:pointer;" onclick="pilihTindakan('${btoa(JSON.stringify(item))}')">
+                <td>${i++}</td>
+                <td>${item.nama}</td>
+                <td>${formatRupiah(item.harga)}</td>
+                </tr>
+            `;
+                    }
+                } else {
+                    table = `<tr> <td colspan = "6" class = "text-center" > Data tidak ditemukan </td></tr >`;
+                }
+                $('#table-data tbody').html(table);
+                paging();
             },
+            error: function (xhr) {
+                console.error('Gagal:', xhr.responseText);
+            }
+        });
+    }
+
+    function cariBarang(nama_barang) {
+        $.ajax({
+            url: '<?= base_url("poli/umum/obat") ?>',
+            data: {
+                carit: nama_barang,
+            },
+            type: 'POST',
+            dataType: 'JSON',
+            success: function (res) {
+                let table = "";
+                if (res.status && res.data.length > 0) {
+                    console.log('Data ditemukan:', res.data.length, 'baris');
+                    let i = 1;
+                    for (const item of res.data) {
+                        table += `
+                            <tr style="cursor:pointer;" onclick="pilihBarang('${btoa(JSON.stringify(item))}')">
+                            <td>${i++}</td>
+                            <td>${item.nama_barang}</td>
+                            <td>${item.satuan_barang}</td>
+                            <td>${formatRupiah(item.harga_jual)}</td>
+                            </tr>
+                        `;
+                    }
+                } else {
+                    console.log('Data tidak ditemukan atau status false');
+                    table = `<tr><td colspan="4" class="text-center">Data tidak ditemukan</td></tr>`;
+                }
+                $('#table-data2 tbody').html(table);
+                paging2();
+            },
+            error: function (xhr) {
+                console.error('Gagal mengambil data:', xhr.responseText);
+            }
+        });
+    }
+
+    function getSatuanObat(id_barang) {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: '<?= base_url("poli/umum/obat") ?>',
+                data: {
+                    id_barang: id_barang
+                },
+                type: 'POST',
+                dataType: 'JSON',
+                success: function (res) {
+                    if (res.status && res.data.length > 0) {
+                        obatSatuanData[id_barang] = res.data;
+
+                        // Urutkan berdasarkan urutan_satuan (BOX = 1, STRIP = 2, TABLET = 3)
+                        res.data.sort((a, b) => a.urutan_satuan - b.urutan_satuan);
+
+                        resolve(res.data);
+                    } else {
+                        reject('Tidak ada data satuan');
+                    }
+                },
+                error: function (xhr) {
+                    reject(xhr.responseText);
+                }
+            });
+        });
+    }
+
+    // Fungsi untuk menghitung konversi satuan
+    function calculateSatuanConversion(selectedSatuan, targetSatuan, satuanData) {
+        // Cari data satuan yang dipilih dan target
+        const fromSatuan = satuanData.find(s => s.id_barang_detail == selectedSatuan.id_barang_detail);
+        const toSatuan = satuanData.find(s => s.id_barang_detail == targetSatuan.id_barang_detail);
+
+        if (!fromSatuan || !toSatuan) return 1;
+
+        // Urutan satuan: 1 = BOX (terbesar), 2 = STRIP, 3 = TABLET (terkecil)
+        const urutanDifference = fromSatuan.urutan_satuan - toSatuan.urutan_satuan;
+
+        // Jika berpindah ke satuan yang lebih kecil (misal BOX ke STRIP), kalikan
+        // Jika berpindah ke satuan yang lebih besar (misal STRIP ke BOX), bagi
+        if (urutanDifference > 0) {
+            // Dari besar ke kecil: kalikan dengan faktor konversi
+            return Math.pow(10, urutanDifference);
+        } else if (urutanDifference < 0) {
+            // Dari kecil ke besar: bagi dengan faktor konversi
+            return 1 / Math.pow(10, Math.abs(urutanDifference));
+        }
+
+        return 1; // Satuan sama
+    }
+
+    // Update fungsi pilihBarang dengan async
+    async function pilihBarang(itemBase64) {
+        const item = JSON.parse(atob(itemBase64));
+        const racikanId = $('#modalObat').data('target-racikan');
+
+        try {
+            // Dapatkan semua satuan untuk obat ini
+            const satuanData = await getSatuanObat(item.id_barang);
+
+            // Ambil data satuan BOX dari satuanData untuk default
+            const boxSatuan = satuanData.find(s => s.id_satuan_barang == 1);
+            if (boxSatuan) {
+                // Update item dengan data dari satuan BOX
+                item.id = boxSatuan.id_barang_detail;
+                item.harga_awal = boxSatuan.harga_awal;
+                item.harga_jual = boxSatuan.harga_jual;
+                item.laba = boxSatuan.laba;
+                item.satuan_barang = boxSatuan.satuan_barang;
+                item.urutan_satuan = boxSatuan.urutan_satuan;
+                item.id_satuan_barang = boxSatuan.id_satuan_barang;
+            }
+
+            if (racikanId) {
+                // Untuk racikan
+                if (selectedObatRacikanIds.has(item.id_barang)) {
+                    Swal.fire({
+                        title: 'Obat Sudah Dipilih di Racikan!',
+                        text: `Obat "${item.nama_barang}" sudah ada di racikan ini.`,
+                        icon: 'warning',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Oke'
+                    });
+                    return;
+                }
+                addRowToRacikan(item, racikanId, satuanData);
+
+            } else {
+                // Untuk obat biasa
+                if (selectedObatBiasaIds.has(item.id_barang)) {
+                    Swal.fire({
+                        title: 'Obat Sudah Dipilih!',
+                        text: `Obat "${item.nama_barang}" sudah ada di resep obat.`,
+                        icon: 'warning',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Oke'
+                    });
+                    return;
+                }
+                tambah_obat_rsp(item, satuanData);
+            }
+            $('#modalObat').modal('hide');
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Gagal memuat data satuan obat', 'error');
+        }
+    }
+
+    function cariDiagnosa(keyword) {
+        $.ajax({
+            url: '<?= base_url("poli/umum/diagnosa") ?>',
+            data: {
+                caridiagnosa: keyword
+            },
+            type: 'POST',
+            dataType: 'JSON',
             success: function (res) {
                 let table = "";
                 if (res.status && res.data.length > 0) {
                     let i = 1;
                     res.data.forEach(item => {
                         table += `
-                            <tr style="cursor:pointer;" onclick="pilihDiagnosa('${btoa(JSON.stringify(item))}')">
-                            <td>${i++}</td>
-                            <td>${item.nama_diagnosa}</td>
-                            </tr>
-                        `;
+                <tr style="cursor:pointer;" onclick="pilihDiagnosa('${btoa(JSON.stringify(item))}')">
+                <td>${i++}</td>
+                <td>${item.nama_diagnosa}</td>
+                </tr>
+            `;
                     });
                 } else {
-                    table = `<tr><td>Diagnosa tidak ditemukan</td></tr>`;
+                    table = `<tr> <td colspan = "6" class = "text-center" > Data tidak ditemukan </td></tr>`;
                 }
                 $('#table-data1 tbody').html(table);
                 paging1();
@@ -227,157 +459,6 @@
         });
     }
 
-    function cariTindakan(keyword) {
-        let count_headert = $(`#table-data thead tr th`).length;
-        $.ajax({
-            url: '<?= base_url("poli/kecantikan/tindakan") ?>',
-            data: {
-                carit: keyword,
-            },
-            type: 'POST',
-            dataType: 'JSON',
-            beforeSend: () => {
-                let loading = `<tr id="tr-loading">
-                                    <td colspan="${count_headert}" class="text-center">
-                                        <div class="loader">
-                                            <img src="<?php echo base_url(); ?>assets/loading-table.gif" width="60" alt="loading">
-                                        </div>
-                                    </td>
-                                </tr>`;
-
-                $(`#table-data tbody`).html(loading);
-            },
-            success: function (res) {
-                let table = "";
-                if (res.status && res.data.length > 0) {
-                    let i = 1;
-                    for (const item of res.data) {
-                        table += `
-            <tr style="cursor:pointer;" onclick="pilihTindakan('${btoa(JSON.stringify(item))}')">
-              <td>${i++}</td>
-              <td>${item.nama}</td>
-              <td>${formatRupiah(item.harga)}</td>
-            </tr>
-          `;
-                    }
-                } else {
-                    table = `<tr><td>Tindakan tidak ditemukan</td></tr>`;
-                }
-                $('#table-data tbody').html(table);
-                paging();
-            },
-            error: function (xhr) {
-                console.error('Gagal:', xhr.responseText);
-            }
-        });
-    }
-    function cariBarang(nama_barang) {
-        let count_headerb = $('#table-data2 thead tr th').length;
-        $.ajax({
-            url: '<?= base_url("poli/kecantikan/obat") ?>',
-            data: { carit: nama_barang },
-            type: 'POST',
-            dataType: 'JSON',
-            beforeSend: () => {
-                let loading = `
-                <tr id="tr-loading">
-                    <td colspan="${count_headerb}" class="text-center">
-                        <div class="loader">
-                            <img src="<?php echo base_url(); ?>assets/loading-table.gif" width="60" alt="loading">
-                        </div>
-                    </td>
-                </tr>`;
-                $('#table-data2 tbody').html(loading);
-            },
-            success: function (res) {
-                let table = "";
-                if (res.status && res.data.length > 0) {
-                    let i = 1;
-                    for (const item of res.data) {
-                        table += `
-                    <tr style="cursor:pointer;" onclick="pilihBarang('${btoa(JSON.stringify(item))}')">
-                        <td>${i++}</td>
-                        <td>${item.nama_barang}</td>
-                    </tr>`;
-                    }
-
-                } else {
-                    table = `<tr><td colspan="2" class="text-center">Data tidak ditemukan</td></tr>`;
-                }
-
-                $('#table-data2 tbody').html(table);
-                paging2();
-            },
-            error: function (xhr) {
-                console.error('Gagal:', xhr.responseText);
-            }
-        });
-    }
-
-    function pilihBarang(itemBase64) {
-        const item = JSON.parse(atob(itemBase64));
-        const itemId = item.id_barang_detail.toString();
-        const racikanId = $('#modalObat').data('target-racikan');
-        if (racikanId) {
-            // hanya cek obat dalam racikan ini saja!
-            let existingRacikanIds = $(`input[name^="racikan[${racikanId}]"][name$="[id]"]`)
-                .map(function () {
-                    return $(this).val().toString();
-                }).get();
-            if (existingRacikanIds.includes(itemId)) {
-                Swal.fire({
-                    icon: "warning",
-                    title: "Peringatan!",
-                    text: "Obat ini sudah ada dalam racikan ini!"
-                });
-                return;
-            }
-
-            // Bila lolos, tambahkan ke racikan
-            addRowToRacikan(normalize(item), racikanId);
-
-            $('#modalObat').removeData('target-racikan');
-            $('#modalObat').modal('hide');
-            return;
-        }
-
-        let existingObatIds = $(`input[name^="obat"][name$="[id_obat_detail_o]"]`)
-            .map(function () {
-                return $(this).val().toString();
-            }).get();
-
-        if (existingObatIds.includes(itemId)) {
-            Swal.fire({
-                icon: "warning",
-                title: "Peringatan!",
-                text: "Obat ini sudah ada dalam daftar obat!"
-            });
-            return;
-        }
-
-        // Bila lolos, tambahkan ke obat biasa
-        tambah_obat_rsp(normalize(item));
-
-        $('#modalObat').modal('hide');
-    }
-
-
-    /** Normalisasi data item */
-    function normalize(item) {
-        return {
-            id: item.id_barang_detail,
-            id_barang: item.id_barang,
-            nama_barang: item.nama_barang || item.nama_barang_master,
-            satuan_barang: item.nama_satuan,
-            id_satuan_barang: item.id_satuan_barang,
-            urutan_satuan: item.urutan_satuan,
-            harga_awal: parseFloat(item.harga_awal) || 0,
-            harga_jual: parseFloat(item.harga_jual) || 0,
-            laba: parseFloat(item.laba) || 0,
-            kode_barang: item.kode_barang,
-            isi_satuan_turunan: item.isi_satuan_turunan
-        };
-    }
 
     function paging($selector) {
         var jumlah_tampil = $('#jumlah_tampil').val();
@@ -405,6 +486,7 @@
         });
 
     }
+
     function paging1($selector) {
         var jumlah_tampil1 = $('#jumlah_tampil1').val();
 
@@ -431,6 +513,7 @@
             }
         });
     }
+
     function paging2($selector) {
         var jumlah_tampil2 = $('#jumlah_tampil2').val();
         if (typeof $selector == 'undefined') {
@@ -456,6 +539,7 @@
             }
         });
     }
+
     function formatAllCurrencyInputs() {
         $('.input_htindakan').each(function () {
             if (this.value) {
@@ -463,7 +547,11 @@
             }
         });
     }
+
     function FormatCurrency1(inputElement) {
+
+        if (!inputElement) return; // TAMBAHKAN VALIDASI INI
+
         // Simpan posisi kursor
         const cursorPosition = inputElement.selectionStart;
         const originalLength = inputElement.value.length;
@@ -481,9 +569,11 @@
             return;
         }
 
-        // Format dengan separator ribuan
-        const formatted = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        inputElement.value = formatted;
+        // Format ribuan
+        const formatted = angka.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+        // Tambahkan Rp.
+        inputElement.value = 'Rp ' + formatted;
 
         // Kembalikan posisi kursor setelah formatting
         const newLength = inputElement.value.length;
@@ -491,561 +581,501 @@
         inputElement.setSelectionRange(cursorPosition + lengthDiff, cursorPosition + lengthDiff);
     }
 
+    // Di fungsi pilihTindakan (dari modal):
     function pilihTindakan(itemBase64) {
         const item = JSON.parse(atob(itemBase64));
-        let duplikat = false;
-        $("input[name='id_tindakan[]']").each(function () {
-            if ($(this).val() == item.id_tindakan) {
-                duplikat = true;
-            }
-        });
-        $("#table_tindakan tbody input[name='tindakanb[]']").each(function () {
-            if ($(this).val().toLowerCase() === item.nama.toLowerCase()) {
-                duplikat = true;
-                // duplikatValuet = $(this).val();
-            }
-        });
-        if (duplikat) {
+        const itemId = Number(item.id); // ← Normalisasi ke number
+
+        console.log('pilihTindakan dipanggil, item.id:', item.id);
+        console.log('selectedTindakanIds sebelum:', Array.from(selectedTindakanIds));
+
+        // Cek apakah tindakan sudah dipilih
+        if (selectedTindakanIds.has(itemId)) {
             Swal.fire({
-                title: "Peringatan!",
-                text: `Tindakan '${item.nama}' sudah ditambahkan!`,
-                icon: "warning",
-                confirmButtonColor: "#35baf5",
+                title: 'Tindakan Sudah Dipilih!',
+                text: `Tindakan "${item.nama}" sudah ada di daftar tindakan.`,
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Oke'
             });
             return;
         }
+
         let row = `
-        <tr>
-            <td>
-                <input type="hidden" name="id_tindakan[]" class="form-control" value="${item.id_tindakan}" readonly>
-                <input type="text" name="tindakan[]" class="form-control" value="${item.nama}" readonly>
-            </td>
-            <td>
-                <input type="text" name="harga_tindakan[]"  class="form-control input_htindakan"  value="${formatRupiah(item.harga)}" readonly>
-            </td>
-            <td>
-                <button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest('tr').remove(); hitungTotalTindakan()"><i class="far fa-trash-alt"></i></button>
-            </td>
-        </tr>
+    <tr data-tindakan-id="${itemId}" data-type="modal">
+        <td>
+            <input type="hidden" name="tindakan_modal[id_tindakan][]" class="form-control" value="${itemId}" readonly>
+            <input type="text" name="tindakan_modal[nama][]" class="form-control" value="${item.nama}" readonly>
+        </td>
+        <td>
+            <input type="text" name="tindakan_modal[harga][]" class="form-control input_htindakan" value="${item.harga}" readonly>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger btn-hapus-tindakan">
+                <i class="far fa-trash-alt"></i>
+            </button>
+        </td>
+    </tr>
     `;
+
         $('#table_tindakan tbody').append(row);
+        selectedTindakanIds.add(itemId); // ← Simpan sebagai number
+        $('#modalTindakan').modal('hide'); // Ganti 'modalDiagnosa' dengan ID modal Anda
+
         const newInput = $('#table_tindakan tbody tr:last .input_htindakan')[0];
-        // FormatCurrency1(newInput);
+        FormatCurrency1(newInput);
         hitungTotalTindakan();
-        $('#modalTindakan').modal("hide");
     }
+
+    // Di fungsi tambahT (manual):
     function tambahT(nama_tindakan, harga_tindakan) {
-        if (!nama_tindakan.trim() || !harga_tindakan.trim()) {
+        // Validasi input
+        if (!nama_tindakan || !harga_tindakan) {
+            Swal.fire('Peringatan!', 'Nama tindakan dan harga harus diisi', 'warning');
+            return;
+        }
+
+        const namaLower = nama_tindakan.toLowerCase();
+
+        // Cek duplikasi untuk tindakan manual
+        if (selectedTindakanManual.has(namaLower)) {
             Swal.fire({
-                title: 'Gagal!',
-                text: "Nama Tindakan dan Harga Tindakan tidak boleh kosong",
-                icon: "error",
-                showCancelButton: false,
-                showConfirmButton: true,
-                confirmButtonColor: "#35baf5",
-                confirmButtonText: "Oke",
-                closeOnConfirm: false,
-                allowOutsideClick: false
-            }).then(() => {
-                $('#nama_tindakan').val('');
-                $('#harga_tindakan').val('');
+                title: 'Tindakan Sudah Dipilih!',
+                text: `Tindakan "${nama_tindakan}" sudah ada di daftar tindakan.`,
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Oke'
             });
             return;
         }
 
-        // 2. Cek duplikat di table
-        let duplikatValuet = null;
-        $("#table_tindakan tbody input[name='tindakanb[]']").each(function () {
-            if ($(this).val().toLowerCase() === nama_tindakan.toLowerCase()) {
-                duplikatValuet = $(this).val();
-            }
-        });
-        $("#table_tindakan tbody input[name='tindakan[]']").each(function () {
-            if ($(this).val().toLowerCase() === nama_tindakan.toLowerCase()) {
-                duplikatValuet = $(this).val();
-            }
-        });
+        let hargaNum = parseFloat(harga_tindakan.replace(/[^0-9]/g, '')) || 0;
 
-        if (duplikatValuet !== null) {
-            Swal.fire({
-                title: 'Gagal!',
-                text: "Tindakan '" + duplikatValuet + "' sudah ditambahkan!",
-                icon: "error",
-                showCancelButton: false,
-                showConfirmButton: true,
-                confirmButtonColor: "#35baf5",
-                confirmButtonText: "Oke",
-                closeOnConfirm: false,
-                allowOutsideClick: false
-            }).then(() => {
-                $('#nama_tindakan').val('');
-                $('#harga_tindakan').val('');
-            });
-            return;
-        }
         let row = `
-        <tr>
-            <td>
-                <input type="text" name="tindakanb[]" class="form-control" autocomplete="off" placeholder="Tindakan" value="${nama_tindakan}" readonly>
-            </td>
-            <td>
-            
-                <input type="text" name="harga_tindakanb[]" class="form-control" onkeyup="FormatCurrency(this);" autocomplete="off" placeholder="Harga" value="${formatRupiah(harga_tindakan)}" readonly>
-            </td>
-            <td>
-                <button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest('tr').remove(); hitungTotalTindakan()"><i class="far fa-trash-alt"></i></button>
-            </td>
-        </tr>
+    <tr data-tindakan-manual="${namaLower}" data-type="manual">
+        <td>
+            <input type="text" name="tindakan_manual[nama][]" class="form-control" autocomplete="off" placeholder="Tindakan" value="${nama_tindakan}" readonly>
+        </td>
+        <td>
+            <input type="text" name="tindakan_manual[harga][]" class="form-control input_htindakan" autocomplete="off" placeholder="Harga" value="${hargaNum}" readonly>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger btn-hapus-tindakan">
+                <i class="far fa-trash-alt"></i>
+            </button>
+        </td>
+    </tr>
     `;
 
         $('#table_tindakan tbody').append(row);
+        selectedTindakanManual.add(namaLower); // INI YANG LUPA! ← TAMBAHKAN INI
+
+        const newInput = $('#table_tindakan tbody tr:last .input_htindakan')[0];
+        if (newInput) {
+            FormatCurrency1(newInput);
+        }
+
         $('#nama_tindakan').val('');
         $('#harga_tindakan').val('');
         hitungTotalTindakan();
     }
-    // hitung tindakan
+
+
+    // Update hitungTotalTindakan untuk field baru:
     function hitungTotalTindakan() {
         let total = 0;
-        // Hitung dari input tindakan yang sudah ada (dipilih dari daftar)
-        $('input[name="harga_tindakan[]"]').each(function () {
+
+        // Hitung dari input tindakan modal
+        $('input[name="tindakan_modal[harga][]"]').each(function () {
             const harga = parseFloat($(this).val().replace(/[^0-9]/g, '')) || 0;
             total += harga;
         });
+
         // Hitung dari input tindakan manual
-        $('input[name="harga_tindakanb[]"]').each(function () {
+        $('input[name="tindakan_manual[harga][]"]').each(function () {
             const harga = parseFloat($(this).val().replace(/[^0-9]/g, '')) || 0;
             total += harga;
         });
-        // Simpan nilai asli (tanpa format) di input hidden jika diperlukan
+
         $('#total_tindakan_hidden').val(total);
+        $('#harga_tindakan_all').text(formatRupiah(total));
         hitungTotal();
     }
 
+    // Di fungsi pilihDiagnosa (dari modal):
     function pilihDiagnosa(itemBase64) {
         const item = JSON.parse(atob(itemBase64));
-        let duplikat = false;
-        $("input[name='id_diagnosa[]']").each(function () {
-            if ($(this).val() == item.id_diagnosa) {
-                duplikat = true;
-            }
-        });
-        $("#table_diagnosa tbody input[name='diagnosab[]']").each(function () {
-            if ($(this).val().toLowerCase() == item.nama_diagnosa.toLowerCase()) {
-                duplikat = true;
-            }
-        });
 
-        if (duplikat) {
+        // Pastikan ID adalah number
+        const itemId = Number(item.id);
+
+        if (selectedDiagnosaIds.has(itemId)) {
             Swal.fire({
-                title: "Peringatan!",
-                text: `Diagnosa '${item.nama_diagnosa}' sudah ditambahkan!`,
-                icon: "warning",
-                confirmButtonColor: "#35baf5",
+                title: 'Diagnosa Sudah Dipilih!',
+                text: `Diagnosa "${item.nama_diagnosa}" sudah ada di daftar diagnosa.`,
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Oke'
             });
             return;
         }
 
         let row = `
-        <tr>
-            <td>
-                <input type="hidden" name="id_diagnosa[]" id="id_diagnosa[]" class="form-control" value="${item.id_diagnosa}" readonly>
-                <input type="text" name="diagnosa[]" class="form-control" value="${item.nama_diagnosa}" readonly>
-            </td>
-            <td>
-                <button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest('tr').remove()"><i class="far fa-trash-alt"></i></button>
-            </td>
-        </tr>
-    `;
-        $("#modalDiagnosa").modal("hide");
+    <tr data-diagnosa-id="${itemId}" data-type="modal">
+        <td>
+            <input type="hidden" name="diagnosa_modal[id_diagnosa][]" class="form-control" value="${itemId}" readonly>
+            <input type="text" name="diagnosa_modal[nama][]" class="form-control" value="${item.nama_diagnosa}" readonly>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger btn-hapus-diagnosa">
+                <i class="far fa-trash-alt"></i>
+            </button>
+        </td>
+    </tr>`;
+
         $('#table_diagnosa tbody').append(row);
+        selectedDiagnosaIds.add(itemId); // ← Simpan sebagai number
+        // TAMBAHKAN KODE INI UNTUK MENUTUP MODAL
+        $('#modalDiagnosa').modal('hide'); // Ganti 'modalDiagnosa' dengan ID modal Anda
     }
+
+    // Di fungsi tambahformD (manual):
     function tambahformD(nama_diagnosa) {
-        // 1. Cek jika input kosong
-        if (!nama_diagnosa.trim()) {
-            Swal.fire({
-                title: 'Gagal!',
-                text: "Inputan Diagnosa Kosong",
-                icon: "error",
-                showCancelButton: false,
-                showConfirmButton: true,
-                confirmButtonColor: "#35baf5",
-                confirmButtonText: "Oke",
-                closeOnConfirm: false,
-                allowOutsideClick: false
-            });
+        if (!nama_diagnosa) {
+            Swal.fire('Peringatan!', 'Isi Nama Diagnosa Terlebih Dahulu', 'warning');
             return;
         }
 
-        // 2. Cek duplikat di table
-        let duplikatValue = null;
-        $("#table_diagnosa tbody input[name='diagnosab[]']").each(function () {
-            if ($(this).val().toLowerCase() === nama_diagnosa.toLowerCase()) {
-                duplikatValue = $(this).val();
-            }
-        });
-        $("#table_diagnosa tbody input[name='diagnosa[]']").each(function () {
-            if ($(this).val().toLowerCase() === nama_diagnosa.toLowerCase()) {
-                duplikatValue = $(this).val();
-            }
-        });
+        const namaLower = nama_diagnosa.toLowerCase();
 
-        if (duplikatValue !== null) {
+        // Cek duplikasi untuk diagnosa manual
+        if (selectedDiagnosaManual.has(namaLower)) {
             Swal.fire({
-                title: 'Gagal!',
-                text: "Diagnosa '" + duplikatValue + "' sudah ditambahkan!",
-                icon: "error",
-                showCancelButton: false,
-                showConfirmButton: true,
-                confirmButtonColor: "#35baf5",
-                confirmButtonText: "Oke",
-                closeOnConfirm: false,
-                allowOutsideClick: false
-            }).then(() => {
-                $('#nama_diagnosa').val('');
+                title: 'Diagnosa Sudah Dipilih!',
+                text: `Diagnosa "${nama_diagnosa}" sudah ada di daftar diagnosa.`,
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Oke'
             });
-
             return;
         }
 
         let row = `
-        <tr>
-            <td>
-                <input type="text" name="diagnosab[]" class="form-control" value="${nama_diagnosa}" autocomplete="off" placeholder="diagnosa" readonly>
-            </td>
-            <td>
-                <button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest('tr').remove()"><i class="far fa-trash-alt"></i></button>
-            </td>
-        </tr>
+    <tr data-diagnosa-manual="${namaLower}" data-type="manual">
+        <td>
+            <input type="text" name="diagnosa_manual[nama][]" class="form-control" value="${nama_diagnosa}" autocomplete="off" placeholder="diagnosa" readonly>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger btn-hapus-diagnosa">
+                <i class="far fa-trash-alt"></i>
+            </button>
+        </td>
+    </tr>
     `;
+
         $('#table_diagnosa tbody').append(row);
-
-        $('#nama_diagnosa').val('');
+        selectedDiagnosaManual.add(namaLower);
     }
 
-    function tambah_obat_rsp(item) {
+
+
+
+    // Update fungsi tambah_obat_rsp dengan dropdown satuan
+    function tambah_obat_rsp(item, satuanData) {
         event.preventDefault();
 
         // Hitung nomor urut
         const rowCount = $('#table_resep tbody tr').length;
         const newRowId = rowCount + 1;
 
-        // Load opsi satuan untuk obat ini
-        muatSatuanObat(item.id_barang, item, newRowId);
-    }
-    function muatSatuanObat(id_barang, baseItem, rowId) {
-        $.ajax({
-            url: '<?= base_url('poli/kecantikan/get_satuan_by_barang/') ?>' + id_barang,
-            type: 'GET',
-            success: function (response) {
-                if (response.status && response.data.length > 0) {
-                    tambahRowobat(response.data, baseItem, rowId);
-                } else {
-                    // Fallback: gunakan data awal jika gagal load satuan
-                    createObatRowFallback(baseItem, rowId);
-                }
-            },
-            error: function () {
-                // Fallback jika error
-                createObatRowFallback(baseItem, rowId);
-            }
-        });
-    }
+        // Cari satuan default (BOX) dari satuanData
+        const defaultSatuan = satuanData.find(s => s.id_satuan_barang == 1) || satuanData[0];
 
-    // Function baru: Buat row dengan dropdown satuan
-    function tambah_obat_rsp(item) {
-        event.preventDefault();
-
-        // Hitung nomor urut
-        const rowCount = $('#table_resep tbody tr').length;
-        const newRowId = rowCount + 1;
-
-        // BUAT DROPDOWN MANUAL DULU, KEMUDIAN LOAD DATA REAL
-        buatRowDenganDropdownManual(item, newRowId);
-    }
-
-    function buatRowDenganDropdownManual(item, rowId) {
-        // console.log(' Membuat row dengan dropdown manual untuk:', item.nama_barang);
-
-        // Buat dropdown sementara dengan data dari modal
-        const satuanDropdown = `
-        <select class="form-select select-satuan" name="obat[${rowId}][id_satuan_o]" 
-                onchange="ubahSatuanManual(${rowId}, this)" data-row="${rowId}">
-            <option value="${item.id}" selected 
-                    data-harga-awal="${item.harga_awal}"
-                    data-harga-jual="${item.harga_jual}"
-                    data-laba="${item.laba}"
-                    data-stok="${item.stok || 100}"
-                    data-urutan="${item.urutan_satuan}"
-                    data-satuan="${item.satuan_barang}">
-                ${item.satuan_barang}
-            </option>
-            <option value="loading" disabled>Loading satuan lainnya...</option>
-        </select>
-    `;
-
-        const hargaJual = parseFloat(item.harga_awal) + parseFloat(item.laba);
-        const newRow = `
-<tr id="resep-row-${rowId}">
-    <td>
-        <input type="hidden" name="obat[${rowId}][id_obat_detail_o]" value="${item.id}" class="id-barang-detail">
-        <input type="hidden" name="obat[${rowId}][id_obat_o]" value="${item.id_barang}" class="id-barang">
-        <input type="hidden" class="form-control harga_jual" name="obat[${rowId}][harga_jual_o]" value="${formatRupiah(hargaJual)}" readonly>
-        <input type="hidden" class="form-control sub-total-laba" name="obat[${rowId}][subtotal_laba_o]" value="${formatRupiah(item.laba)}" readonly>
-        <input type="text" class="form-control" name="obat[${rowId}][nama_obat_o]" value="${item.nama_barang}" readonly>
-    </td>
-    <td>
-        <!-- DROPDOWN YANG SUDAH BERHASIL -->
-        ${satuanDropdown}
-        <input type="hidden" class="form-control nama-satuan" name="obat[${rowId}][satuan_o]" value="${item.satuan_barang}" readonly>
-        <input type="hidden" class="form-control urutan-satuan" name="obat[${rowId}][urutan_satuan_o]" value="${item.urutan_satuan}" readonly>
-    </td>
-    <td>
-        <input type="text" class="form-control jumlah" name="obat[${rowId}][jumlah_o]" min="1" value="1" 
-               onkeyup="hitungSubtotal(${rowId})" data-row="${rowId}" required inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-    </td>
-    <td>
-        <input type="text" class="form-control" name="obat[${rowId}][aturan_pakai_o]" placeholder="Contoh: 3x1 sehari" autocomplete="off" required>
-    </td>
-    <td>
-        <input type="text" class="form-control harga" name="obat[${rowId}][harga_o]" 
-               value="${formatRupiah(item.harga_awal)}" readonly>
-    </td>
-    <td>
-        <input type="text" class="form-control laba" name="obat[${rowId}][laba_o]" 
-               value="${formatRupiah(item.laba)}" readonly>
-    </td>
-    <td>
-        <input type="text" class="form-control subtotall" name="obat[${rowId}][subtotal_ol]" 
-               value="${formatRupiah(hargaJual)}" readonly>
-        <input type="hidden" class="form-control subtotal" name="obat[${rowId}][subtotal_o]" 
-               value="${formatRupiah(item.harga_awal)}" readonly>
-    </td>
-    <td class="text-center">
-        <button type="button" class="btn btn-sm btn-danger" 
-                onclick="$('#resep-row-${rowId}').remove(); hitungTotal()">
-            <i class="far fa-trash-alt"></i>
-        </button>
-    </td>
-    <input type="hidden" class="form-control sub-total-laba-harga" name="obat[${rowId}][subtotal_laba_harga_o]" 
-           value="${formatRupiah(hargaJual)}">
-</tr>`;
-
-        $('#table_resep tbody').append(newRow);
-        hitungTotal();
-
-        // SETELAH ROW DIBUAT, LOAD DATA SATUAN ASLI DARI DATABASE
-        muatSatuanObatAsli(item.id_barang, rowId, item.id);
-    }
-
-    // LOAD DATA SATUAN ASLI DARI DATABASE
-    function muatSatuanObatAsli(id_barang, rowId, currentSatuanId) {
-        $.ajax({
-            url: '<?= base_url('poli/kecantikan/get_satuan_by_barang/') ?>' + id_barang,
-            type: 'GET',
-            dataType: 'JSON',
-            success: function (response) {
-                if (response.status && response.data && response.data.length > 0) {
-                    updateDropdownDenganDataAsli(response.data, rowId, currentSatuanId);
-                } else {
-                    console.log(' Tidak ada data satuan tambahan');
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error(' Error load satuan asli:', error);
-            }
-        });
-    }
-
-    // UPDATE DROPDOWN DENGAN DATA ASLI DARI DATABASE
-    function updateDropdownDenganDataAsli(satuanList, rowId, currentSatuanId) {
-        var row = $('#resep-row-' + rowId);
-        var selectElement = row.find('.select-satuan');
-        // Kosongkan dropdown
-        selectElement.empty();
-
-        // Tambahkan options baru dari data real
-        satuanList.forEach(function (satuan) {
-            var selected = satuan.id_barang_detail == currentSatuanId ? 'selected' : '';
-            var optionText = satuan.satuan_barang;
-
-            // Tambahkan info stok jika ada
-            // if (satuan.stok && satuan.stok > 0) {
-            //     optionText += ' (Stok: ' + satuan.stok + ')';
-            // }
-
-            selectElement.append(
-                $('<option>', {
-                    value: satuan.id_barang_detail,
-                    selected: selected,
-                    'data-harga-awal': satuan.harga_awal,
-                    'data-harga-jual': satuan.harga_jual,
-                    'data-laba': satuan.laba,
-                    // 'data-stok': satuan.stok || 0,
-                    'data-urutan': satuan.urutan_satuan,
-                    'data-satuan': satuan.satuan_barang,
-                    text: optionText
-                })
-            );
-        });
-
-        // console.log(' Dropdown updated dengan ' + satuanList.length + ' pilihan satuan');
-    }
-
-    // FUNCTION UNTUK UBAH SATUAN (VERSI FINAL)
-    function ubahSatuanManual(rowId, selectElement) {
-        var selectedOption = $(selectElement).find('option:selected');
-        var selectedValue = selectedOption.val();
-
-        // console.log(' Ubah satuan ke:', selectedValue);
-        // console.log('Data selected:', selectedOption.data());
-
-        // Jika memilih satuan yang berbeda, ambil data detail dari server
-        if (selectedValue && selectedValue !== 'loading') {
-            $.ajax({
-                url: '<?= base_url('poli/kecantikan/get_satuan_detail/') ?>' + selectedValue,
-                type: 'GET',
-                dataType: 'JSON',
-                success: function (response) {
-                    if (response.status) {
-                        updateRowWithNewSatuanobat(rowId, response.data);
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error load detail satuan:', error);
-                    // Fallback: update dari data attributes
-                    updateFromDataAttributes(rowId, selectedOption);
-                }
+        // Buat dropdown satuan
+        let satuanOptions = '';
+        if (satuanData && satuanData.length > 0) {
+            satuanData.forEach(function (satuan) {
+                const selected = satuan.id_barang_detail == defaultSatuan.id_barang_detail ? 'selected' : '';
+                satuanOptions += `<option value="${satuan.id_barang_detail}" 
+                    data-harga-awal="${satuan.harga_awal}" 
+                    data-harga-jual="${satuan.harga_jual}" 
+                    data-laba="${satuan.laba}" 
+                    data-satuan="${satuan.satuan_barang}" 
+                    data-urutan="${satuan.urutan_satuan}" 
+                    data-id-satuan="${satuan.id_satuan_barang}"
+                    ${selected}>
+                    ${satuan.satuan_barang}
+                </option>`;
             });
+        }
+
+        // Gunakan harga dari defaultSatuan (BOX), bukan dari item modal
+        const hargaAwal = defaultSatuan.harga_awal || 0;
+        const hargaJual = defaultSatuan.harga_jual || 0;
+        const laba = defaultSatuan.laba || 0;
+        const satuan = defaultSatuan.satuan_barang || '';
+        const urutanSatuan = defaultSatuan.urutan_satuan || 0;
+
+        // Buat baris baru dengan dropdown satuan
+
+        // Buat baris baru dengan dropdown satuan
+        const newRow = `
+    <tr id="resep-row-${newRowId}" data-obat-id="${item.id_barang}" data-satuan-data='${JSON.stringify(satuanData)}'>
+        <td>
+            <input type="hidden" name="obat[${newRowId}][id_obat_detail_o]" class="id-barang-detail" value="${defaultSatuan.id_barang_detail}">
+            <input type="hidden" name="obat[${newRowId}][id_obat_o]" value="${item.id_barang}">
+            <!-- Harga per satuan (hidden) -->
+            <input type="hidden" class="harga-awal-satuan" value="${hargaAwal}">
+            <input type="hidden" class="harga-jual-satuan" value="${hargaJual}">
+            <input type="hidden" class="laba-satuan" value="${laba}">
+            <!-- Harga total untuk submit (ANGKA MURNI) -->
+            <input type="hidden" class="form-control harga_jual" name="obat[${newRowId}][harga_jual_o]" value="${hargaJual}">
+            <input type="hidden" class="form-control sub-total-laba" name="obat[${newRowId}][subtotal_laba_o]" value="${laba}">
+            <input type="text" class="form-control" name="obat[${newRowId}][nama_obat_o]" value="${item.nama_barang}" readonly>
+        </td>
+        <td>
+            <select class="form-select select-satuan" name="obat[${newRowId}][id_satuan_o]" 
+                    onchange="ubahSatuanObat(${newRowId}, this)">
+                ${satuanOptions}
+            </select>
+            <input type="hidden" class="form-control nama-satuan" name="obat[${newRowId}][satuan_o]" value="${satuan}">
+            <input type="hidden" class="form-control urutan-satuan" name="obat[${newRowId}][urutan_satuan_o]" value="${urutanSatuan}">
+        </td>
+        <td>
+            <div class="input-group">
+                <input type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required class="form-control jumlah" name="obat[${newRowId}][jumlah_o]" min="1" value="1" 
+                    onkeyup="hitungSubtotalWithConversion(${newRowId})">
+            </div>
+        </td>
+        <td>
+            <input type="text" class="form-control" name="obat[${newRowId}][aturan_pakai_o]" placeholder="Contoh: 2x1 sehari" autocomplete="off" required>
+        </td>
+        <td>
+            <!-- UI: formatted, Hidden: angka murni -->
+            <input type="text" class="form-control harga" 
+                   value="${formatRupiah(hargaAwal)}" readonly>
+            <!-- Hidden input untuk submit -->
+            <input type="hidden" class="harga-unit" name="obat[${newRowId}][harga_o]" value="${hargaAwal}">
+        </td>
+        <td>
+            <!-- UI: formatted, Hidden: angka murni -->
+            <input type="text" class="form-control laba" 
+                   value="${formatRupiah(laba)}" readonly>
+            <!-- Hidden input untuk submit -->
+            <input type="hidden" class="laba-unit" name="obat[${newRowId}][laba_o]" value="${laba}">
+        </td>
+        <td>
+            <!-- UI: formatted -->
+            <input type="text" class="form-control subtotall" 
+                   value="${formatRupiah(hargaJual)}" readonly>
+            <!-- Hidden: angka murni -->
+            <input type="hidden" class="form-control subtotal" name="obat[${newRowId}][subtotal_o]" 
+                   value="${hargaAwal}">
+            <input type="hidden" name="obat[${newRowId}][subtotal_ol]" value="${hargaJual}">
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-danger" 
+                    onclick="hapusObat('${item.id_barang}', ${newRowId})">
+                <i class="far fa-trash-alt"></i>
+            </button>
+            <input type="hidden" class="form-control sub-total-laba-harga" name="obat[${newRowId}][subtotal_laba_harga_o]" 
+                   value="${hargaJual}">
+        </td>
+    </tr>`;
+
+        // Tambahkan ke tabel
+        $('#table_resep tbody').append(newRow);
+        selectedObatBiasaIds.add(item.id_barang); // Tracking
+
+        // Hitung total
+        hitungTotal();
+    }
+
+
+
+    // Fungsi untuk mengubah satuan obat dengan sistem konversi
+    function ubahSatuanObat(rowId, selectElement) {
+        const row = $(`#resep-row-${rowId}`);
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const satuanData = JSON.parse(row.attr('data-satuan-data'));
+
+        // Ambil data satuan lama
+        const currentJumlah = parseFloat(row.find('.jumlah').val()) || 1;
+        const currentSatuanId = row.find('.id-barang-detail').val();
+        const currentSatuan = satuanData.find(s => s.id_barang_detail == currentSatuanId);
+
+        // Data satuan baru
+        const newSatuanId = selectedOption.value;
+        const newSatuan = satuanData.find(s => s.id_barang_detail == newSatuanId);
+
+        // Hitung konversi
+        const conversionRate = calculateSatuanConversion(currentSatuan, newSatuan, satuanData);
+
+        // Konversi jumlah
+        const newJumlah = currentJumlah * conversionRate;
+
+        console.log('Debug ubahSatuan:');
+        console.log('- Dari satuan:', currentSatuan?.satuan_barang);
+        console.log('- Ke satuan:', newSatuan?.satuan_barang);
+        console.log('- Konversi rate:', conversionRate);
+        console.log('- Jumlah lama:', currentJumlah);
+        console.log('- Jumlah baru:', newJumlah);
+        console.log('- Harga awal baru:', newSatuan?.harga_awal);
+        console.log('- Harga jual baru:', newSatuan?.harga_jual);
+        console.log('- Laba baru:', newSatuan?.laba);
+
+        // Update nilai di form dengan data satuan baru
+        row.find('.id-barang-detail').val(newSatuanId);
+        row.find('.harga-awal-satuan').val(newSatuan.harga_awal);
+        row.find('.harga-jual-satuan').val(newSatuan.harga_jual);
+        row.find('.laba-satuan').val(newSatuan.laba);
+        row.find('.urutan-satuan').val(newSatuan.urutan_satuan);
+        row.find('.nama-satuan').val(newSatuan.satuan_barang);
+
+
+
+        // Hitung ulang subtotal dengan jumlah dan satuan baru
+        hitungSubtotalWithConversion(rowId);
+    }
+
+
+    // Fungsi untuk update info konversi
+    function updateKonversiInfo(rowId, satuan, jumlah) {
+        const row = $(`#resep-row-${rowId}`);
+        const satuanData = JSON.parse(row.attr('data-satuan-data'));
+        const currentJumlah = parseFloat(row.find('.jumlah').val()) || 1; // Ambil jumlah saat ini
+        // Cari satuan dasar (TABLET) untuk konversi
+        const tabletSatuan = satuanData.find(s => s.urutan_satuan == 3); // TABLET
+
+        if (tabletSatuan) {
+            const conversionRate = calculateSatuanConversion(satuan, tabletSatuan, satuanData);
+            const jumlahTablet = currentJumlah * conversionRate;
+
+            // Tampilkan di suatu tempat (misalnya di kolom Qty sebagai tooltip)
+            console.log(`Konversi: ${currentJumlah} ${satuan.satuan_barang} = ${jumlahTablet.toFixed(0)} tablet`);
         }
     }
 
-    // UPDATE ROW DENGAN DATA BARU DARI SERVER
-    function updateRowWithNewSatuanobat(rowId, satuanData) {
-        var row = $('#resep-row-' + rowId);
+    // Fungsi hitung subtotal dengan konversi yang benar (Real Time)
+    // function hitungSubtotalWithConversion(rowId) {
+    //     const row = $(`#resep-row-${rowId}`);
+    //     const jumlah = parseFloat(row.find('.jumlah').val()) || 0;
 
-        // console.log(' Update row dengan data baru:', satuanData);
+    //     // Ambil harga PER SATUAN dari hidden fields (ANGKA MURNI)
+    //     const hargaAwalSatuan = parseFloat(row.find('.harga-awal-satuan').val()) || 0;
+    //     const hargaJualSatuan = parseFloat(row.find('.harga-jual-satuan').val()) || 0;
+    //     const labaSatuan = parseFloat(row.find('.laba-satuan').val()) || 0;
 
-        // Update semua field dengan data baru
-        row.find('.id-barang-detail').val(satuanData.id_barang_detail);
-        row.find('.urutan-satuan').val(satuanData.urutan_satuan);
-        row.find('.nama-satuan').val(satuanData.satuan_barang);
 
-        // Update tampilan harga
-        row.find('.harga').val(formatRupiah(satuanData.harga_awal));
-        row.find('.laba').val(formatRupiah(satuanData.laba));
+    //     // Hitung TOTAL berdasarkan jumlah (ANGKA MURNI)
+    //     const totalHargaAwal = jumlah * hargaAwalSatuan;
+    //     const totalHargaJual = jumlah * hargaJualSatuan;
+    //     const totalLaba = jumlah * labaSatuan;
 
-        const hargaJual = parseFloat(satuanData.harga_awal) + parseFloat(satuanData.laba);
-        row.find('.harga_jual').val(formatRupiah(hargaJual));
-        row.find('.subtotall').val(formatRupiah(hargaJual));
-        row.find('.sub-total-laba-harga').val(formatRupiah(hargaJual));
 
-        // Update stok maksimal
-        // row.find('.jumlah').attr('max', satuanData.stok || 0);
-        // row.find('.jumlah').next('small').text('Stok: ' + (satuanData.stok || 0));
+    //     // ✅ UPDATE UI: format Rupiah untuk display
+    //     row.find('.harga').val(formatRupiah(totalHargaAwal));
+    //     row.find('.laba').val(formatRupiah(totalLaba));
+    //     row.find('.subtotall').val(formatRupiah(totalHargaJual));
 
-        // Hitung ulang subtotal
-        hitungSubtotal(rowId);
+    //     // ✅ UPDATE HIDDEN FIELDS: angka murni untuk backend
+    //     row.find('.subtotal').val(totalHargaAwal); // angka murni
+    //     row.find('.harga_jual').val(totalHargaJual); // angka murni
+    //     row.find('.sub-total-laba').val(totalLaba); // angka murni
+    //     row.find('.sub-total-laba-harga').val(totalHargaJual); // angka murni
 
-        // console.log(' Satuan berhasil diubah ke:', satuanData.satuan_barang);
-    }
+    //     hitungTotal();
+    // }
+function hitungSubtotalWithConversion(rowId) {
+    const row = $(`#resep-row-${rowId}`);
+    const jumlah = parseFloat(row.find('.jumlah').val()) || 0;
 
-    // FALLBACK: UPDATE DARI DATA ATTRIBUTES
-    function updateFromDataAttributes(rowId, selectedOption) {
-        var row = $('#resep-row-' + rowId);
+    // nilai per unit (murni)
+    const hargaAwalSatuan = parseFloat(row.find('.harga-awal-satuan').val()) || 0;
+    const hargaJualSatuan = parseFloat(row.find('.harga-jual-satuan').val()) || 0;
+    const labaSatuan      = parseFloat(row.find('.laba-satuan').val()) || 0;
 
-        var hargaAwal = parseFloat(selectedOption.data('harga-awal')) || 0;
-        var laba = parseFloat(selectedOption.data('laba')) || 0;
-        var hargaJual = hargaAwal + laba;
-        // var stok = parseInt(selectedOption.data('stok')) || 0;
-        var namaSatuan = selectedOption.data('satuan') || '';
+    // total (yang boleh berubah hanya subtotal)
+    const totalHargaAwal = jumlah * hargaAwalSatuan;
+    const totalHargaJual = jumlah * hargaJualSatuan;
+    const totalLaba      = jumlah * labaSatuan;
 
-        // Update hidden fields
-        row.find('.id-barang-detail').val(selectedOption.val());
-        row.find('.nama-satuan').val(namaSatuan);
-        row.find('.urutan-satuan').val(selectedOption.data('urutan'));
+    // ✅ UI: harga & laba tetap PER UNIT
+    row.find('.harga').val(formatRupiah(hargaAwalSatuan));
+    row.find('.laba').val(formatRupiah(labaSatuan));
 
-        // Update tampilan
-        row.find('.harga').val(formatRupiah(hargaAwal));
-        row.find('.laba').val(formatRupiah(laba));
-        row.find('.harga_jual').val(formatRupiah(hargaJual));
-        row.find('.subtotall').val(formatRupiah(hargaJual));
-        row.find('.sub-total-laba-harga').val(formatRupiah(hargaJual));
+    // ✅ UI: subtotal (total jual) berubah sesuai jumlah
+    row.find('.subtotall').val(formatRupiah(totalHargaJual));
 
-        // Update stok
-        // row.find('.jumlah').attr('max', stok);
-        // row.find('.jumlah').next('small').text('Stok: ' + stok);
+    // ✅ Hidden untuk backend:
+    // - unit
+    row.find('.harga-unit').val(hargaAwalSatuan);
+    row.find('.laba-unit').val(labaSatuan);
 
-        // Hitung ulang
-        hitungSubtotal(rowId);
+    // - subtotal
+    row.find('.subtotal').val(totalHargaAwal);        // subtotal harga awal
+    row.find('[name^="obat["][name$="[subtotal_ol]"]').val(totalHargaJual); // subtotal jual (kalau ada)
+    row.find('.sub-total-laba').val(totalLaba);       // subtotal laba
 
-        // console.log(' Satuan berhasil diubah (fallback):', namaSatuan);
-    }
+    // kalau kamu pakai harga_jual_o sebagai UNIT jual, set unit:
+    row.find('.harga_jual').val(hargaJualSatuan);
 
-    // Function fallback: Jika gagal load satuan, gunakan data awal
-    function createObatRowFallback(item, rowId) {
-        const hargaJual = parseFloat(item.harga_awal) + parseFloat(item.laba);
+    hitungTotal();
+}
 
-        // Kembali ke cara lama (tanpa dropdown)
-        const newRow = `
-<tr id="resep-row-${rowId}">
-    <td>
-        <input type="hidden" name="obat[${rowId}][id_obat_detail_o]" value="${item.id}">
-        <input type="hidden" name="obat[${rowId}][id_obat_o]" value="${item.id_barang}">
-        <input type="hidden" class="form-control harga_jual" name="obat[${rowId}][harga_jual_o]" value="${formatRupiah(item.harga_jual)}" readonly>
-        <input type="hidden" class="form-control sub-total-laba" name="obat[${rowId}][subtotal_laba_o]" value="${formatRupiah(item.laba)}" readonly>
-        <input type="text" class="form-control" name="obat[${rowId}][nama_obat_o]" value="${item.nama_barang}" readonly>
-    </td>
-    <td>
-        <input type="hidden" class="form-control" name="obat[${rowId}][id_satuan_o]" value="${item.id_satuan_barang}" readonly>
-        <input type="text" class="form-control" name="obat[${rowId}][satuan_o]" value="${item.satuan_barang}" readonly>
-        <input type="hidden" class="form-control" name="obat[${rowId}][urutan_satuan_o]" value="${item.urutan_satuan}" readonly>
-    </td>
-    <td>
-        <input type="text" class="form-control jumlah" name="obat[${rowId}][jumlah_o]" min="1" value="1" 
-               onkeyup="hitungSubtotal(${rowId})" required inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-    </td>
-    <td>
-        <input type="text" class="form-control" name="obat[${rowId}][aturan_pakai_o]" placeholder="Aturan pakai" autocomplete="off" required>
-    </td>
-    <td>
-        <input type="text" class="form-control harga" name="obat[${rowId}][harga_o]" 
-               value="${formatRupiah(item.harga_awal)}" readonly>
-    </td>
-    <td>
-        <input type="text" class="form-control laba" name="obat[${rowId}][laba_o]" 
-               value="${formatRupiah(item.laba)}" readonly>
-    </td>
-    <td>
-        <input type="text" class="form-control subtotall" name="obat[${rowId}][subtotal_ol]" 
-               value="${formatRupiah(item.harga_jual)}" readonly>
-        <input type="hidden" class="form-control subtotal" name="obat[${rowId}][subtotal_o]" 
-               value="${formatRupiah(item.harga_awal)}" readonly>
-    </td>
-    <td class="text-center">
-        <button type="button" class="btn btn-sm btn-danger" 
-                onclick="$('#resep-row-${rowId}').remove(); hitungTotal()">
-            <i class="far fa-trash-alt"></i>
-        </button>
-    </td>
-    <input type="hidden" class="form-control sub-total-laba-harga" name="obat[${rowId}][subtotal_laba_harga_o]" 
-           value="${formatRupiah(item.harga_jual)}">
-</tr>`;
 
-        $('#table_resep tbody').append(newRow);
-        hitungTotal();
-    }
-    // Function untuk mengubah satuan
-    function ubahSatuan(rowId, idBarangDetail) {
-        $.ajax({
-            url: '<?= base_url('poli/kecantikan/get_satuan_detail') ?>' + idBarangDetail,
-            type: 'GET',
-            success: function (response) {
-                if (response.status) {
-                    updateRowWithNewSatuanobat(rowId, response.data);
-                }
-            }
+    // Update fungsi hitungTotal untuk handle konversi
+    // Update fungsi hitungTotal untuk handle konversi
+    function hitungTotal() {
+        let totalObat = 0;
+        let totalObatl = 0;
+        let totalRacikan = 0;
+        let totalRacikanl = 0;
+        let totaltindakan = parseFloat($('#total_tindakan_hidden').val()) || 0;
+
+        // Hitung total dari obat biasa - AMBIL DARI HIDDEN FIELDS (angka murni)
+        $('[id^="resep-row-"]').each(function () {
+            // Ambil dari .subtotal (hidden, angka murni), bukan dari .subtotall (formatted)
+            const subtotal = parseFloat($(this).find('.subtotal').val()) || 0;
+            const subtotalLaba = parseFloat($(this).find('.sub-total-laba').val()) || 0;
+
+            totalObat += subtotal;
+            totalObatl += (subtotal + subtotalLaba);
         });
+
+        // Hitung total dari racikan - AMBIL DARI INPUT HIDDEN
+        $('[id^="racikan-obat-row-"]').each(function () {
+            const subtotal = parseFloat($(this).find('.subtotal-racikan').val()) || 0;
+            const subtotalLaba = parseFloat($(this).find('.subtotallaba-racikan').val()) || 0;
+
+            totalRacikan += subtotal;
+            totalRacikanl += (subtotal + subtotalLaba);
+        });
+
+        const grandTotal = totalObat + totalRacikan;
+        const grandTotall = totalObatl + totalRacikanl;
+        const tobatt = totaltindakan + grandTotall;
+
+        // UI: formatted, Hidden: angka murni
+        $('#harga_tindakan_all').text(formatRupiah(totaltindakan));
+        $('#harga_total').text(formatRupiah(grandTotall));
+        $('#all_uang').val(grandTotall); // angka murni
+        $('#tobat1').text(formatRupiah(tobatt));
+        $('#tobat').val(tobatt); // angka murni
     }
+
+
+    // Event listener untuk perubahan jumlah
+    $(document).on('change', '.jumlah', function () {
+        const rowId = $(this).closest('tr').attr('id').replace('resep-row-', '');
+        hitungSubtotalWithConversion(rowId);
+    });
+
+    // Event listener untuk perubahan dropdown satuan
+    $(document).on('change', '.select-satuan', function () {
+        const rowId = $(this).closest('tr').attr('id').replace('resep-row-', '');
+        ubahSatuanObat(rowId, this);
+    });
 
     function hitungSubtotal(rowId) {
         const row = $(`#resep-row-${rowId}`);
@@ -1066,78 +1096,47 @@
         hitungTotal();
     }
 
-
+    // funct hitung semua total
     function hitungTotal() {
-        let totalObatHarga = 0;
-        let totalObatLaba = 0;
-        let totalObatHargaLaba = 0;
-
-        let totalRacikanHarga = 0;
-        let totalRacikanLaba = 0;
-        let totalRacikanHargaLaba = 0;
-
+        let totalObat = 0;
+        let totalObatl = 0;
+        let totalRacikan = 0;
+        let totalRacikanl = 0;
         let totaltindakan = parseFloat($('#total_tindakan_hidden').val()) || 0;
 
         // Hitung total dari obat biasa
         $('[id^="resep-row-"]').each(function () {
-            const subtotalHarga = parseFloat($(this).find('.subtotal').val().replace(/[^0-9]/g, '')) || 0;
-            const subtotalLaba = parseFloat($(this).find('.sub-total-laba').val().replace(/[^0-9]/g, '')) || 0;
-
-            totalObatHarga += subtotalHarga;
-            totalObatLaba += subtotalLaba;
-            totalObatHargaLaba += (subtotalHarga + subtotalLaba);
+            const subtotal = $(this).find('.subtotal').val().replace(/[^0-9]/g, '') || 0;
+            const subtotalLaba = $(this).find('.sub-total-laba').val().replace(/[^0-9]/g, '') || 0;
+            // totalObat += (parseFloat(subtotal) + parseFloat(subtotalLaba));
+            totalObat += (parseFloat(subtotal));
+            totalObatl += (parseFloat(subtotal) + parseFloat(subtotalLaba));
         });
 
-        // Hitung total dari racikan - PERBAIKAN: KALIKAN DENGAN JUMLAH RACIKAN
-        $('[id^="racikan-"]').each(function () {
-            const racikanId = $(this).attr('id').replace('racikan-', '');
-            let racikanHarga = 0;
-            let racikanLaba = 0;
-            let racikanHargaLaba = 0;
+        // Hitung total dari racikan
+        $('[id^="racikan-obat-"]').each(function () {
+            $(this).find('tr').each(function () {
+                const subtotal = $(this).find('.subtotal-racikan').val();
+                const subtotalLaba = $(this).find('.subtotallaba-racikan').val();
 
-            // Hitung total dari semua barang dalam racikan
-            $(`#racikan-obat-${racikanId} tr`).each(function () {
-                const subtotalHarga = parseFloat($(this).find('.subtotal-racikan').val().replace(/[^0-9]/g, '')) || 0;
-                const subtotalLaba = parseFloat($(this).find('.subtotallaba-racikan').val().replace(/[^0-9]/g, '')) || 0;
-
-                racikanHarga += subtotalHarga;
-                racikanLaba += subtotalLaba;
-                racikanHargaLaba += (subtotalHarga + subtotalLaba);
+                if (subtotal && subtotalLaba) {
+                    const subtotalNum = parseFloat(subtotal.replace(/[^0-9]/g, '')) || 0;
+                    const subtotalLabaNum = parseFloat(subtotalLaba.replace(/[^0-9]/g, '')) || 0;
+                    totalRacikan += subtotalNum;
+                    totalRacikanl += subtotalNum + subtotalLabaNum;
+                }
             });
-
-            // DAPATKAN JUMLAH RACIKAN (berapa kali racikan ini dibuat)
-            const jumlahRacikan = parseFloat($(`input[name="racikan[${racikanId}][jumlah_r]"]`).val()) || 1;
-
-            // console.log(`Racikan ${racikanId}: Total barang = ${racikanHargaLaba}, Jumlah racikan = ${jumlahRacikan}`);
-
-            // KALIKAN DENGAN JUMLAH RACIKAN - INI YANG TERLEWAT!
-            totalRacikanHarga += (racikanHarga * jumlahRacikan);
-            totalRacikanLaba += (racikanLaba * jumlahRacikan);
-            totalRacikanHargaLaba += (racikanHargaLaba * jumlahRacikan);
         });
-
-        // Grand Total
-        const grandTotalHarga = totalObatHarga + totalRacikanHarga;
-        const grandTotalLaba = totalObatLaba + totalRacikanLaba;
-        const grandTotalHargaLaba = totalObatHargaLaba + totalRacikanHargaLaba;
-
-        const totalSemua = totaltindakan + grandTotalHargaLaba;
-
-        // Update tampilan
+        const grandTotal = totalObat + totalRacikan;
+        const grandTotall = totalObatl + totalRacikanl;
+        const tobatt = totaltindakan + grandTotall;
         $('#harga_tindakan_all').text(formatRupiah(totaltindakan));
-        $('#harga_total').text(formatRupiah(grandTotalHargaLaba));
-        $('#all_uang').val(grandTotalHargaLaba);
-        $('#tobat1').text(formatRupiah(totalSemua));
-        $('#tobat').val(totalSemua);
-
-        // console.log("=== DEBUG TOTAL ===");
-        // console.log("Total Obat (Harga): " + totalObatHarga);
-        // console.log("Total Obat (Laba): " + totalObatLaba);
-        // console.log("Total Racikan (Harga): " + totalRacikanHarga);
-        // console.log("Total Racikan (Laba): " + totalRacikanLaba);
-        // console.log("Grand Total (Harga+Laba): " + grandTotalHargaLaba);
-        // console.log("Total Tindakan: " + totaltindakan);
-        // console.log("Total Semua: " + totalSemua);
+        // $('#total_obat').text(formatRupiah(totalObat));
+        // $('#utotal_obat').val(formatRupiah(totalObat));
+        $('#harga_total').text(formatRupiah(grandTotall));
+        $('#all_uang').val(grandTotall);
+        $('#tobat1').text(formatRupiah(tobatt));
+        $('#tobat').val(tobatt);
     }
     // Fungsi untuk menghapus baris obat
     function hapus_obat_multiple(rowId) {
@@ -1186,9 +1185,13 @@
             return 'Rp 0';
         }
 
-        // Handle string (hapus karakter non-digit)
+        // Handle string (hapus karakter non-digit jika formatted)
         if (typeof angka === 'string') {
-            angka = angka.replace(/[^0-9]/g, '');
+            // Cek apakah sudah formatted (ada koma atau titik)
+            if (angka.includes(',') || angka.includes('.')) {
+                angka = angka.replace(/[^0-9]/g, '');
+            }
+            // Jika tidak, anggap sudah angka murni
         }
 
         // Konversi ke number
@@ -1204,7 +1207,6 @@
     }
 
 
-    let racikanCounter = 0;
     // Fungsi untuk format input currency
     function formatCurrency(input) {
         let value = input.value.replace(/[^0-9]/g, '');
@@ -1216,367 +1218,419 @@
             input.value = '';
         }
     }
-    function addRowToRacikan(item, racikanId) {
-        // LOAD SATUAN UNTUK OBAT DI RACIKAN - SAMA SEPERTI OBAT BIASA
-        muatSatuanUntukRacikan(item.id_barang, item, racikanId);
-    }
-    function muatSatuanUntukRacikan(id_barang, baseItem, racikanId) {
-        $.ajax({
-            url: '<?= base_url('poli/kecantikan/get_satuan_by_barang/') ?>' + id_barang,
-            type: 'GET',
-            dataType: 'JSON',
-            success: function (response) {
-                if (response.status && response.data && response.data.length > 0) {
-                    buatRowRacikanDenganDropdown(response.data, baseItem, racikanId);
-                } else {
-                    buatRowRacikanFallback(baseItem, racikanId);
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error(' Error load satuan untuk racikan:', error);
-                buatRowRacikanFallback(baseItem, racikanId);
-            }
-        });
-    }
+    let racikanCounter = 0;
+
     function tambahRacikan() {
         racikanCounter++;
         const racikanId = 'racikan-' + racikanCounter;
         let html = '';
         html += `
-     <div class="racikan-card card border mb-3" id="${racikanId}">
-    <div class="card-body">
-        <div class="mb-2 row">
-            <label class="col-sm-3 col-form-label">Nama Racikan</label>
-            <div class="col-sm-9">
-                <input type="text" name="racikan[${racikanCounter}][nama_r]" 
-                       class="form-control" placeholder="Nama Racikan" required>
+            <div class="racikan-card card border mb-3" id="${racikanId}">
+            <div class="card-body">
+                <div class="mb-2 row">
+                    <label class="col-sm-3 col-form-label">Nama Racikan</label>
+                    <div class="col-sm-9">
+                        <input type="text" name="racikan[${racikanCounter}][nama_r]" 
+                            class="form-control" placeholder="Nama Racikan" autocomplete="off" required>
+                    </div>
+                </div>
+                <div class="mb-2 row">
+                    <label class="col-sm-3 col-form-label">Jumlah</label>
+                    <div class="col-sm-9">
+                        <input type="text" name="racikan[${racikanCounter}][jumlah_r]" 
+                            class="form-control" placeholder="Jumlah" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"  value="1" required>
+                    </div>
+                </div>
+                <div class="mb-2 row">
+                    <label class="col-sm-3 col-form-label">Aturan Pakai</label>
+                    <div class="col-sm-9">
+                        <textarea type="text" name="racikan[${racikanCounter}][aturan_r]" 
+                            class="form-control" placeholder="Aturan Pakai" autocomplete="off" required></textarea>
+                    </div>
+                </div>
+                <div class="mb-2 row">
+                    <label class="col-sm-3 col-form-label">Keterangan</label>
+                    <div class="col-sm-9">
+                        <textarea name="racikan[${racikanCounter}][keterangan_r]" 
+                            class="form-control" placeholder="Keterangan"></textarea>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-1 mt-3">
+                    <button type="button" class="btn btn-success btn-md" 
+                            onclick="tambahObatracikan(${racikanCounter})">
+                        <i class="fas fa-plus"></i> Tambah Obat
+                    </button>
+                    <button type="button" class="btn btn-danger btn-md" 
+                            onclick="$('#${racikanId}').remove(); hitungTotal()">
+                        <i class="far fa-trash-alt"></i> Hapus Racikan
+                    </button>
+                </div>
+                <div class="table-responsive mt-2">
+                    <table class="table table-md table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Nama Obat</th>
+                                <th>Satuan</th>
+                                <th>Qty</th>
+                                <th>Harga</th>
+                                <th>Laba</th>
+                                <th>Subtotal Harga</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="racikan-obat-${racikanCounter}"></tbody>
+                    </table> 
+                </div>
             </div>
         </div>
-        <div class="mb-2 row">
-            <label class="col-sm-3 col-form-label">Jumlah</label>
-            <div class="col-sm-9">
-                <input type="text" name="racikan[${racikanCounter}][jumlah_r]" 
-                       class="form-control" placeholder="Jumlah" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"  value="1" required>
-            </div>
-        </div>
-        <div class="mb-2 row">
-            <label class="col-sm-3 col-form-label">Aturan Pakai</label>
-            <div class="col-sm-9">
-            <textarea type="text" name="racikan[${racikanCounter}][aturan_r]" 
-                       class="form-control" placeholder="Aturan Pakai" required></textarea>
-                
-            </div>
-        </div>
-        <div class="mb-2 row">
-            <label class="col-sm-3 col-form-label">Keterangan</label>
-            <div class="col-sm-9">
-            <textarea type="text" name="racikan[${racikanCounter}][keterangan_r]" 
-                       class="form-control" placeholder="Keterangan"></textarea>
-            </div>
-        </div>
-        <div class="d-flex justify-content-end gap-1 mt-3">
-            <button type="button" class="btn btn-success btn-md" 
-                    onclick="tambahObatracikan(${racikanCounter})">
-                <i class="fas fa-plus"></i> Tambah Obat
-            </button>
-            <button type="button" class="btn btn-danger btn-md" 
-                    onclick="$('#${racikanId}').remove(); hitungTotal()">
-                <i class="far fa-trash-alt"></i> Hapus Racikan
-            </button>
-        </div>
-        <div class="table-responsive mt-2">
-            <table class="table table-md table-bordered">
-                <thead>
-                    <tr>
-                        <th>Nama Obat</th>
-                        <th width="12%">Satuan</th>
-                        <th width="10%">Qty</th>
-                        <th>Harga</th>
-                        <th>Laba</th>
-                        <th>Subtotal Harga</th>
-                        <th width="5%">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="racikan-obat-${racikanCounter}"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-    `;
+            `;
         $('#racikan_container').append(html);
     }
-    // <input type="text" name="racikan[${racikanCounter}][aturan_r]" 
-    //                        class="form-control" placeholder="Aturan Pakai" required>
-    // <input type="text" name="racikan[${racikanCounter}][keterangan_r]" 
-    //                        class="form-control" placeholder="Keterangan">
-    function buatRowRacikanDenganDropdown(satuanList, baseItem, racikanId) {
+
+
+    // Nama baru untuk fungsi yang menambahkan baris ke tabel racikan
+    function addRowToRacikan(item, racikanId, satuanData) {
         const rowCount = $(`#racikan-obat-${racikanId} tr`).length;
         const newRowId = rowCount + 1;
 
-        // CARI SATUAN AKTIF - SAMA SEPERTI OBAT BIASA
-        var activeSatuan = satuanList.find(satuan =>
-            satuan.id_barang_detail == baseItem.id
-        ) || satuanList[0];
-        // GENERATE DROPDOWN - SAMA SEPERTI OBAT BIASA
-        var satuanDropdown = generateDropdownUntukRacikan(satuanList, activeSatuan.id_barang_detail, racikanId, newRowId);
-        const hargaJual = parseFloat(activeSatuan.harga_awal) + parseFloat(activeSatuan.laba);
-        const newRow = `
-<tr id="racikan-obat-row-${racikanId}-${newRowId}">
-    <td>
-        <input type="hidden" name="racikan[${racikanId}][obat][${newRowId}][id]" value="${activeSatuan.id_barang_detail}" class="id-barang-detail-racikan">
-        <input type="hidden" name="racikan[${racikanId}][obat][${newRowId}][id_barang_br]" value="${activeSatuan.id_barang}" class="id-barang-racikan">
-        <input type="hidden" class="form-control harga-jracikan" name="racikan[${racikanId}][obat][${newRowId}][harga_jbr]" value="${formatRupiah(hargaJual)}" readonly>
-        <input type="hidden" class="form-control subtotallaba-racikan" name="racikan[${racikanId}][obat][${newRowId}][subtotal_laba_br]" value="${formatRupiah(activeSatuan.laba)}" readonly>
-        <input type="text" class="form-control" name="racikan[${racikanId}][obat][${newRowId}][nama_br]" value="${activeSatuan.nama_barang}" readonly>
-    </td>
-    <td>
-        <!-- DROPDOWN SATUAN - SAMA SEPERTI OBAT BIASA -->
-        ${satuanDropdown}
-        <input type="hidden" class="form-control nama-satuan-racikan" name="racikan[${racikanId}][obat][${newRowId}][satuan_br]" value="${activeSatuan.satuan_barang}" readonly>
-        <input type="hidden" class="form-control urutan-satuan-racikan" name="racikan[${racikanId}][obat][${newRowId}][urutan_satuan_br]" value="${activeSatuan.urutan_satuan}" readonly>
-    </td>
-    <td>
-        <input type="text" class="form-control jumlah-racikan" name="racikan[${racikanId}][obat][${newRowId}][jumlah_br]"  value="1" 
-               onkeyup="hitungSubtotalRacikan(${racikanId}, ${newRowId})" data-racikan="${racikanId}" data-obat="${newRowId}" required inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-    </td>
-    <td>
-        <input type="text" class="form-control harga-racikan" name="racikan[${racikanId}][obat][${newRowId}][harga_br]" 
-               value="${formatRupiah(activeSatuan.harga_awal)}" readonly>
-    </td>
-    <td>
-        <input type="text" class="form-control laba-racikan" name="racikan[${racikanId}][obat][${newRowId}][laba_br]" 
-               value="${formatRupiah(activeSatuan.laba)}" readonly>
-    </td>
-    <td>
-        <input type="text" class="form-control subtotal-racikanl" name="racikan[${racikanId}][obat][${newRowId}][subtotal_brl]" 
-               value="${formatRupiah(hargaJual)}" readonly>
-        <input type="hidden" class="form-control subtotal-racikan" name="racikan[${racikanId}][obat][${newRowId}][subtotal_br]" 
-               value="${formatRupiah(activeSatuan.harga_awal)}" readonly>
-    </td>
-    <td class="text-center">
-        <button type="button" class="btn btn-sm btn-danger" 
-                onclick="hapusObatDariRacikan(${racikanId}, ${newRowId})">
-            <i class="far fa-trash-alt"></i>
-        </button>
-    </td>
-    <input type="hidden" class="form-control subtotalabaharga-racikan" name="racikan[${racikanId}][obat][${newRowId}][subtotal_laba_harga_br]" 
-           value="${formatRupiah(hargaJual)}">
-</tr>`;
+        console.log(`Tambah obat ke racikan ${racikanId}, row ke-${newRowId}, total rows: ${rowCount}`);
 
-        $(`#racikan-obat-${racikanId}`).append(newRow);
-        hitungTotalRacikan(racikanId);
-    }
-
-    function generateDropdownUntukRacikan(satuanList, selectedId, racikanId, rowId) {
-        var options = '';
-
-        var sortedSatuanList = satuanList.sort(function (a, b) {
-            return (a.urutan_satuan || 0) - (b.urutan_satuan || 0);
-        });
-
-        sortedSatuanList.forEach(function (satuan) {
-            var selected = satuan.id_satuan_barang == selectedId ? 'selected' : '';
-            options += `<option value="${satuan.id_satuan_barang}" ${selected}
-                data-harga-awal="${satuan.harga_awal}"
-                data-harga-jual="${satuan.harga_jual}"
-                data-laba="${satuan.laba}"
-                data-urutan="${satuan.urutan_satuan}"
-                data-stok="${satuan.stok || 0}"
-                data-satuan="${satuan.satuan_barang}"
-                data-id-barang-detail="${satuan.id_barang_detail}"> <!-- SIMPAN ID BARANG DETAIL -->
-                ${satuan.satuan_barang}
-            </option>`;
-        });
-
-        return `
-    <select class="form-select select-satuan-racikan" 
-            name="racikan[${racikanId}][obat][${rowId}][id_satuan_br]"
-            onchange="ubahSatuanRacikan(${racikanId}, ${rowId}, this)" 
-            data-racikan="${racikanId}" data-obat="${rowId}">
-        ${options}
-    </select>
-`;
-    }
-    // 2. TAMPILKAN MODAL UNTUK TAMBAH OBAT KE RACIKAN (TIDAK PERLU DIUBAH)
-    function tambahObatracikan(racikanId) {
-        $('#modalObat').data('target-racikan', racikanId).modal('show');
-    }
-
-    // 3. TAMBAH OBAT KE RACIKAN (SUDAH DIMODIFIKASI DENGAN DROPDOWN)
-    function addRowToRacikan(item, racikanId) {
-        muatSatuanUntukRacikan(item.id_barang, item, racikanId);
-    }
-    function ubahSatuanRacikan(racikanId, obatId, selectElement) {
-        // DAPATKAN SELECTED OPTION DAN DATA ATTRIBUTES
-        var selectedOption = $(selectElement).find('option:selected');
-        var idSatuanBarang = selectedOption.val(); // id_satuan_barang dari value
-        var idBarangDetail = selectedOption.data('id-barang-detail'); // id_barang_detail dari attribute
-
-        if (!idBarangDetail) {
-            console.error(' id_barang_detail tidak ditemukan');
+        // Pastikan semua field yang diperlukan ada di item
+        if (!item.id_barang || !item.id_satuan_barang || !item.urutan_satuan) {
+            console.error("Data item tidak lengkap:", item);
+            alert("Data obat tidak lengkap, silakan pilih obat lagi");
             return;
         }
 
-        // GUNAKAN id_barang_detail UNTUK AJAX (karena controller butuh ini)
-        $.ajax({
-            url: '<?= base_url('poli/kecantikan/get_satuan_detail/') ?>' + idBarangDetail,
-            type: 'GET',
-            dataType: 'JSON',
-            success: function (response) {
-                if (response.status) {
-                    updateSatuanRacikan(racikanId, obatId, response.data);
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error('Error load detail satuan racikan:', error);
-                updateSatuanRacikanFromAttributes(racikanId, obatId, idBarangDetail);
-            }
-        });
-    }
+        // Cari satuan default (BOX) dari satuanData
+        const defaultSatuan = satuanData.find(s => s.id_satuan_barang == 1) || satuanData[0];
 
-    function updateSatuanRacikan(racikanId, obatId, satuanData) {
-        var row = $(`#racikan-obat-row-${racikanId}-${obatId}`);
+        // Gunakan harga dari defaultSatuan (BOX), bukan dari item modal
+        const hargaAwal = defaultSatuan.harga_awal || 0;
+        const hargaJual = defaultSatuan.harga_jual || 0;
+        const laba = defaultSatuan.laba || 0;
+        const satuan = defaultSatuan.satuan_barang || '';
+        const urutanSatuan = defaultSatuan.urutan_satuan || 0;
+        const idBarangDetail = defaultSatuan.id_barang_detail || item.id;
 
-        // UPDATE SEMUA FIELD - SAMA SEPERTI OBAT BIASA
-        row.find('.id-barang-detail-racikan').val(satuanData.id_barang_detail);
-        row.find('.urutan-satuan-racikan').val(satuanData.urutan_satuan);
-        row.find('.nama-satuan-racikan').val(satuanData.satuan_barang);
-
-        // UPDATE TAMPILAN HARGA
-        row.find('.harga-racikan').val(formatRupiah(satuanData.harga_awal));
-        row.find('.laba-racikan').val(formatRupiah(satuanData.laba));
-
-        const hargaJual = parseFloat(satuanData.harga_awal) + parseFloat(satuanData.laba);
-        row.find('.harga-jracikan').val(formatRupiah(hargaJual));
-        row.find('.subtotal-racikanl').val(formatRupiah(hargaJual));
-        row.find('.subtotalabaharga-racikan').val(formatRupiah(hargaJual));
-
-        // UPDATE STOK
-        // row.find('.jumlah').attr('max', satuanData.stok || 0);
-        // row.find('.jumlah').next('small').text('Stok: ' + (satuanData.stok || 0));
-
-        // UPDATE SELECTED OPTION
-        row.find('.select-satuan-racikan option').removeAttr('selected');
-        row.find('.select-satuan-racikan option[value="' + satuanData.id_barang_detail + '"]').attr('selected', true);
-
-        // HITUNG ULANG
-        hitungSubtotalRacikan(racikanId, obatId);
-    }
-
-    function updateSatuanRacikanFromAttributes(racikanId, obatId, idBarangDetail) {
-        var row = $(`#racikan-obat-row-${racikanId}-${obatId}`);
-        var selectElement = row.find('.select-satuan-racikan');
-        var selectedOption = selectElement.find('option[data-id-barang-detail="' + idBarangDetail + '"]');
-
-        if (selectedOption.length > 0) {
-            var hargaAwal = parseFloat(selectedOption.data('harga-awal')) || 0;
-            var laba = parseFloat(selectedOption.data('laba')) || 0;
-            var hargaJual = hargaAwal + laba;
-            // var stok = parseInt(selectedOption.data('stok')) || 0;
-            var namaSatuan = selectedOption.data('satuan') || '';
-
-            // UPDATE DARI DATA ATTRIBUTES
-            row.find('.id-barang-detail-racikan').val(idBarangDetail);
-            row.find('.nama-satuan-racikan').val(namaSatuan);
-            row.find('.urutan-satuan-racikan').val(selectedOption.data('urutan'));
-
-            row.find('.harga-racikan').val(formatRupiah(hargaAwal));
-            row.find('.laba-racikan').val(formatRupiah(laba));
-            row.find('.harga-jracikan').val(formatRupiah(hargaJual));
-            row.find('.subtotal-racikanl').val(formatRupiah(hargaJual));
-            row.find('.subtotalabaharga-racikan').val(formatRupiah(hargaJual));
-
-            // row.find('.jumlah').attr('max', stok);
-            // row.find('.jumlah').next('small').text('Stok: ' + stok);
-
-            hitungSubtotalRacikan(racikanId, obatId);
+        // Buat dropdown satuan untuk racikan
+        let satuanOptions = '';
+        if (satuanData && satuanData.length > 0) {
+            satuanData.forEach(function (satuanItem) {
+                const selected = satuanItem.id_barang_detail == defaultSatuan.id_barang_detail ? 'selected' : '';
+                satuanOptions += `<option value="${satuanItem.id_barang_detail}" 
+                data-harga-awal="${satuanItem.harga_awal}" 
+                data-harga-jual="${satuanItem.harga_jual}" 
+                data-laba="${satuanItem.laba}" 
+                data-satuan="${satuanItem.satuan_barang}" 
+                data-urutan="${satuanItem.urutan_satuan}" 
+                data-id-satuan="${satuanItem.id_satuan_barang}"
+                ${selected}>
+                ${satuanItem.satuan_barang}
+            </option>`;
+            });
         }
-    } function hapusObatDariRacikan(racikanId, obatId) {
-        $(`#racikan-obat-row-${racikanId}-${obatId}`).remove();
-        hitungTotalRacikan(racikanId);
-    }
-    function buatRowRacikanFallback(baseItem, racikanId) {
-        const rowCount = $(`#racikan-obat-${racikanId} tr`).length;
-        const newRowId = rowCount + 1;
 
-        const hargaJual = parseFloat(baseItem.harga_awal) + parseFloat(baseItem.laba);
+        // Cek duplikasi HANYA di racikan yang sama
+        if (selectedObatRacikanIds.has(item.id_barang + '-' + racikanId)) {
+            Swal.fire({
+                title: 'Obat Sudah Dipilih di Racikan!',
+                text: `Obat "${item.nama_barang}" sudah ada di racikan ini.`,
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Oke'
+            });
+            return;
+        }
 
-        const newRow = `
-<tr id="racikan-obat-row-${racikanId}-${newRowId}">
-    <td>
-        <input type="hidden" name="racikan[${racikanId}][obat][${newRowId}][id]" value="${baseItem.id}">
-        <input type="hidden" name="racikan[${racikanId}][obat][${newRowId}][id_barang_br]" value="${baseItem.id_barang}">
-        <input type="hidden" class="form-control subtotallaba-racikan" name="racikan[${racikanId}][obat][${newRowId}][subtotal_laba_br]" value="${baseItem.laba}" readonly>
-        <input type="hidden" class="form-control harga-jracikan" name="racikan[${racikanId}][obat][${newRowId}][harga_jbr]" value="${baseItem.harga_jual}" readonly>
-        <input type="text" class="form-control" name="racikan[${racikanId}][obat][${newRowId}][nama_br]" value="${baseItem.nama_barang}" readonly>
-    </td>
-    <td>
-        <input type="hidden" class="form-control" name="racikan[${racikanId}][obat][${newRowId}][id_satuan_br]" value="${baseItem.id_satuan_barang}">
-        <input type="text" class="form-control" name="racikan[${racikanId}][obat][${newRowId}][satuan_br]" value="${baseItem.satuan_barang}" readonly>
-        <input type="hidden" class="form-control" name="racikan[${racikanId}][obat][${newRowId}][urutan_satuan_br]" value="${baseItem.urutan_satuan}">
-    </td>
-    <td>
-        <input type="text" class="form-control jumlah-racikan" name="racikan[${racikanId}][obat][${newRowId}][jumlah_br]" value="1" onkeyup="hitungSubtotalRacikan(${racikanId}, ${newRowId})" required inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-    </td>
-    <td>
-        <input type="text" class="form-control harga-racikan" name="racikan[${racikanId}][obat][${newRowId}][harga_br]" value="${formatRupiah(baseItem.harga_awal)}" readonly>
-    </td>
-    <td>
-        <input type="text" class="form-control laba-racikan" name="racikan[${racikanId}][obat][${newRowId}][laba_br]" value="${formatRupiah(baseItem.laba)}" readonly>
-    </td>
-    <td>
-        <input type="text" class="form-control subtotal-racikanl" name="racikan[${racikanId}][obat][${newRowId}][subtotal_brl]" value="${formatRupiah(baseItem.harga_jual)}" readonly>
-        <input type="hidden" class="form-control subtotal-racikan" name="racikan[${racikanId}][obat][${newRowId}][subtotal_br]" value="${formatRupiah(baseItem.harga_awal)}" readonly>
-    </td>
-    <td class="text-center">
-        <button type="button" class="btn btn-sm btn-danger" onclick="$(this).closest('tr').remove(); hitungTotalRacikan(${racikanId})">
-            <i class="far fa-trash-alt"></i>
-        </button>
-    </td>
-</tr>`;
+        let newRow = `
+    <tr id="racikan-obat-row-${racikanId}-${newRowId}" data-obat-id="${item.id_barang}" data-satuan-data='${JSON.stringify(satuanData)}'>
+        <td>
+            <input type="hidden" name="racikan[${racikanId}][obat][${newRowId}][id]" value="${idBarangDetail}">
+            <input type="hidden" name="racikan[${racikanId}][obat][${newRowId}][id_barang_br]" value="${item.id_barang}">
+            
+            <!-- Harga per satuan (hidden) -->
+            <input type="hidden" class="harga-awal-satuan-racikan" value="${hargaAwal}">
+            <input type="hidden" class="harga-jual-satuan-racikan" value="${hargaJual}">
+            <input type="hidden" class="laba-satuan-racikan" value="${laba}">
+            
+            <input type="text" class="form-control" name="racikan[${racikanId}][obat][${newRowId}][nama_br]" value="${item.nama_barang}" readonly>
+        </td>
+        <td>
+            <select class="form-select select-satuan-racikan" name="racikan[${racikanId}][obat][${newRowId}][id_satuan_br]" 
+                    onchange="ubahSatuanRacikan(${racikanId}, ${newRowId}, this)">
+                ${satuanOptions}
+            </select>
+            <input type="hidden" class="form-control nama-satuan-racikan" name="racikan[${racikanId}][obat][${newRowId}][satuan_br]" value="${satuan}">
+            <input type="hidden" class="form-control urutan-satuan-racikan" name="racikan[${racikanId}][obat][${newRowId}][urutan_satuan_br]" value="${urutanSatuan}">
+        </td>
+        <td>
+            <input type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required class="form-control jumlah-racikan" name="racikan[${racikanId}][obat][${newRowId}][jumlah_br]" min="1" value="1" 
+                onkeyup="hitungSubtotalRacikan(${racikanId}, ${newRowId})">
+        </td>
+        <td>
+            <!-- Input untuk tampilan (formatted) -->
+            <input type="text" class="form-control harga-racikan-display" value="${formatRupiah(hargaAwal)}" readonly>
+            <!-- Input untuk submit (hidden) -->
+            <input type="hidden" class="form-control harga-racikan" name="racikan[${racikanId}][obat][${newRowId}][harga_br]" value="${hargaAwal}">
+        </td>
+        <td>
+            <!-- Input untuk tampilan (formatted) -->
+            <input type="text" class="form-control laba-racikan-display" value="${formatRupiah(laba)}" readonly>
+            <!-- Input untuk submit (hidden) -->
+            <input type="hidden" class="form-control laba-racikan" name="racikan[${racikanId}][obat][${newRowId}][laba_br]" value="${laba}">
+        </td>
+        <td>
+            <!-- Input untuk tampilan (formatted) -->
+            <input type="text" class="form-control subtotal-racikanl-display" value="${formatRupiah(hargaJual)}" readonly>
+            <!-- Input untuk submit (hidden) -->
+            <input type="hidden" class="form-control subtotal-racikanl" name="racikan[${racikanId}][obat][${newRowId}][subtotal_brl]" value="${hargaJual}">
+            <input type="hidden" class="form-control subtotal-racikan" name="racikan[${racikanId}][obat][${newRowId}][subtotal_br]" value="${hargaAwal}">
+            <input type="hidden" class="form-control subtotallaba-racikan" name="racikan[${racikanId}][obat][${newRowId}][subtotal_laba_br]" value="${laba}">
+            <input type="hidden" class="form-control harga-jracikan" name="racikan[${racikanId}][obat][${newRowId}][harga_jbr]" value="${hargaJual}">
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-danger" 
+                    onclick="hapusObatRacikan('${item.id_barang}', ${racikanId}, ${newRowId}, event)">
+                <i class="far fa-trash-alt"></i>
+            </button>
+        </td>
+    </tr>`;
 
         $(`#racikan-obat-${racikanId}`).append(newRow);
-        hitungTotalRacikan(racikanId);
+        selectedObatRacikanIds.add(item.id_barang + '-' + racikanId); // Tracking dengan ID racikan
+        hitungSubtotalRacikan(racikanId, newRowId);
     }
 
-    function hitungSubtotalRacikan(racikanId, rowId) {
+    // Fungsi untuk mengubah satuan obat racikan TANPA mengubah jumlah
+    function ubahSatuanRacikan(racikanId, rowId, selectElement) {
         const row = $(`#racikan-obat-row-${racikanId}-${rowId}`);
-        const jumlah = parseFloat(row.find('.jumlah-racikan').val()) || 0;
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const satuanData = JSON.parse(row.attr('data-satuan-data'));
 
-        const harga = parseFloat(row.find('.harga-racikan').val().replace(/[^0-9]/g, '')) || 0;
-        const laba = parseFloat(row.find('.laba-racikan').val().replace(/[^0-9]/g, '')) || 0;
+        // Data satuan baru yang dipilih
+        const newSatuanId = selectedOption.value;
+        const newSatuan = satuanData.find(s => s.id_barang_detail == newSatuanId);
 
-        // PERHITUNGAN YANG BENAR:
-        const subtotalHarga = jumlah * harga;        // Harga pokok saja
-        const subtotalLaba = jumlah * laba;          // Laba saja
-        const subtotalHargaPlusLaba = jumlah * (harga + laba); // Harga + Laba
+        if (!newSatuan) {
+            console.error('Satuan tidak ditemukan:', newSatuanId);
+            return;
+        }
 
-        // UPDATE NILAI
-        row.find('.subtotal-racikan').val(formatRupiah(subtotalHarga));
-        row.find('.subtotallaba-racikan').val(formatRupiah(subtotalLaba));
-        row.find('.subtotal-racikanl').val(formatRupiah(subtotalHargaPlusLaba));
-        row.find('.subtotalabaharga-racikan').val(formatRupiah(subtotalHargaPlusLaba));
-        hitungTotalRacikan(racikanId);
+        console.log('Debug ubahSatuanRacikan:');
+        console.log('- Ke satuan:', newSatuan.satuan_barang);
+        console.log('- Harga awal baru:', newSatuan.harga_awal);
+        console.log('- Harga jual baru:', newSatuan.harga_jual);
+        console.log('- Laba baru:', newSatuan.laba);
+
+        // Update nilai di form dengan data satuan baru
+        row.find('input[name*="[id]"]').val(newSatuanId);
+        row.find('.harga-awal-satuan-racikan').val(newSatuan.harga_awal);
+        row.find('.harga-jual-satuan-racikan').val(newSatuan.harga_jual);
+        row.find('.laba-satuan-racikan').val(newSatuan.laba);
+        row.find('.urutan-satuan-racikan').val(newSatuan.urutan_satuan);
+        row.find('.nama-satuan-racikan').val(newSatuan.satuan_barang);
+
+        // Hitung ulang subtotal dengan jumlah yang SAMA tapi satuan yang BARU
+        hitungSubtotalRacikan(racikanId, rowId);
     }
-    function hitungTotalRacikan(racikanId) {
-        let totalHargaRacikan = 0;
-        let totalLabaRacikan = 0;
-        let totalHargaLabaRacikan = 0;
 
+    function tambahObatracikan(racikanId) {
+        // Simpan ID racikan sebagai data pada modal
+        $('#modalObat').data('target-racikan', racikanId).modal('show');
+    }
+
+    // Fungsi hapus obat biasa
+    function hapusObat(obatId, rowId) {
+        $(`#resep-row-${rowId}`).remove();
+        selectedObatBiasaIds.delete(obatId); // Hapus dari tracking
+        console.log('Obat dihapus dari resep biasa, ID:', obatId, 'Sisa tracking:', Array.from(selectedObatBiasaIds));
+        hitungTotal();
+    }
+
+    // Fungsi hapus obat racikan  
+    function hapusObatRacikan(obatId, racikanId, rowId) {
+        // Remove dari DOM
+        $(`#racikan-obat-row-${racikanId}-${rowId}`).remove();
+
+        // Remove dari tracking
+        selectedObatRacikanIds.delete(obatId + '-' + racikanId);
+
+        // Hitung ulang total
+        hitungTotalRacikan(racikanId);
+        hitungTotal();
+
+        // Re-index rows yang tersisa (OPTIONAL tapi direkomendasikan)
+        reindexRacikanRows(racikanId);
+    }
+
+    // TAMBAH fungsi untuk re-index (optional):
+    function reindexRacikanRows(racikanId) {
+        let newIndex = 1;
         $(`#racikan-obat-${racikanId} tr`).each(function () {
-            const subtotalHarga = parseFloat($(this).find('.subtotal-racikan').val().replace(/[^0-9]/g, '')) || 0;
-            const subtotalLaba = parseFloat($(this).find('.subtotallaba-racikan').val().replace(/[^0-9]/g, '')) || 0;
+            // Update semua input names
+            $(this).find('[name^="racikan"]').each(function () {
+                let oldName = $(this).attr('name');
+                let newName = oldName.replace(
+                    /racikan\[(\d+)\]\[obat\]\[(\d+)\]/g,
+                    `racikan[$1][obat][${newIndex}]`
+                );
+                $(this).attr('name', newName);
+            });
 
-            totalHargaRacikan += subtotalHarga;
-            totalLabaRacikan += subtotalLaba;
-            totalHargaLabaRacikan += (subtotalHarga + subtotalLaba);
+            // Update ID tr
+            $(this).attr('id', `racikan-obat-row-${racikanId}-${newIndex}`);
+
+            // Update onclick handler untuk button hapus
+            $(this).find('button').attr('onclick',
+                `hapusObatRacikan(${$(this).data('obat-id')}, ${racikanId}, ${newIndex})`
+            );
+
+            newIndex++;
+        });
+    }
+
+    // Ganti onclick di button hapus racikan
+    function hapusSeluruhRacikan(racikanId) {
+        // Hapus semua obat dalam racikan dari tracking
+        $(`#racikan-obat-${racikanId} tr`).each(function () {
+            const obatId = $(this).data('obat-id');
+            if (obatId) {
+                selectedObatRacikanIds.delete(obatId + '-' + racikanId);
+            }
         });
 
-        // Simpan total per racikan jika diperlukan
-        $(`#racikan-${racikanId}`).data('total-harga', totalHargaRacikan);
-        $(`#racikan-${racikanId}`).data('total-laba', totalLabaRacikan);
-        $(`#racikan-${racikanId}`).data('total-harga-laba', totalHargaLabaRacikan);
+        $(`#racikan-${racikanId}`).remove();
+        hitungTotal();
+    }
 
+    // Event listener untuk perubahan jumlah racikan
+    $(document).on('change', '.jumlah-racikan', function () {
+        const rowId = $(this).closest('tr').attr('id').match(/racikan-obat-row-(\d+)-(\d+)/);
+        if (rowId && rowId.length >= 3) {
+            hitungSubtotalRacikan(parseInt(rowId[1]), parseInt(rowId[2]));
+        }
+    });
+
+    // Event listener untuk perubahan dropdown satuan racikan
+    $(document).on('change', '.select-satuan-racikan', function () {
+        const rowId = $(this).closest('tr').attr('id').match(/racikan-obat-row-(\d+)-(\d+)/);
+        if (rowId && rowId.length >= 3) {
+            ubahSatuanRacikan(parseInt(rowId[1]), parseInt(rowId[2]), this);
+        }
+    });
+
+    // Fungsi reset
+    function resetModalObat() {
+        $('#modalObat').removeData('target-racikan');
+        console.log('Modal obat direset untuk resep biasa');
+    }
+
+    // function hitungSubtotalRacikan(racikanId, rowId) {
+    //     const row = $(`#racikan-obat-row-${racikanId}-${rowId}`);
+
+    //     // Ambil nilai dari input (nilai asli)
+    //     const jumlah = parseFloat(row.find('.jumlah-racikan').val()) || 0;
+    //     const hargaAwalSatuan = parseFloat(row.find('.harga-awal-satuan-racikan').val()) || 0;
+    //     const hargaJualSatuan = parseFloat(row.find('.harga-jual-satuan-racikan').val()) || 0;
+    //     const labaSatuan = parseFloat(row.find('.laba-satuan-racikan').val()) || 0;
+
+    //     console.log('Debug hitungSubtotalRacikan:', {
+    //         jumlah: jumlah,
+    //         hargaAwalSatuan: hargaAwalSatuan,
+    //         hargaJualSatuan: hargaJualSatuan,
+    //         labaSatuan: labaSatuan
+    //     });
+
+    //     // Hitung subtotal
+    //     const subtotalHargaAwal = jumlah * hargaAwalSatuan;
+    //     const subtotalHargaJual = jumlah * hargaJualSatuan;
+    //     const subtotalLaba = jumlah * labaSatuan;
+
+    //     console.log('Hasil perhitungan:', {
+    //         subtotalHargaAwal: subtotalHargaAwal,
+    //         subtotalHargaJual: subtotalHargaJual,
+    //         subtotalLaba: subtotalLaba
+    //     });
+
+    //     // Update input hidden untuk submit
+    //     row.find('.harga-racikan').val(subtotalHargaAwal);
+    //     row.find('.laba-racikan').val(subtotalLaba);
+    //     row.find('.subtotal-racikan').val(subtotalHargaAwal);
+    //     row.find('.subtotal-racikanl').val(subtotalHargaJual);
+    //     row.find('.subtotallaba-racikan').val(subtotalLaba);
+    //     row.find('.harga-jracikan').val(subtotalHargaJual);
+
+    //     // Update tampilan dengan format Rupiah
+    //     row.find('.harga-racikan-display').val(formatRupiah(subtotalHargaAwal));
+    //     row.find('.laba-racikan-display').val(formatRupiah(subtotalLaba));
+    //     row.find('.subtotal-racikanl-display').val(formatRupiah(subtotalHargaJual));
+
+    //     // Hitung total racikan
+    //     hitungTotalRacikan(racikanId);
+    //     hitungTotal();
+    // }
+
+    function hitungSubtotalRacikan(racikanId, rowId) {
+    const row = $(`#racikan-obat-row-${racikanId}-${rowId}`);
+
+    const jumlah = parseFloat(row.find('.jumlah-racikan').val()) || 0;
+
+    // per unit (murni)
+    const hargaAwalSatuan = parseFloat(row.find('.harga-awal-satuan-racikan').val()) || 0;
+    const hargaJualSatuan = parseFloat(row.find('.harga-jual-satuan-racikan').val()) || 0;
+    const labaSatuan      = parseFloat(row.find('.laba-satuan-racikan').val()) || 0;
+
+    // subtotal (total)
+    const subtotalHargaAwal = jumlah * hargaAwalSatuan;
+    const subtotalHargaJual = jumlah * hargaJualSatuan;
+    const subtotalLaba      = jumlah * labaSatuan;
+
+    // ✅ harga & laba tetap PER UNIT (display + hidden unit)
+    row.find('.harga-racikan').val(hargaAwalSatuan);              // harga_br (unit)
+    row.find('.laba-racikan').val(labaSatuan);                    // laba_br (unit)
+    row.find('.harga-racikan-display').val(formatRupiah(hargaAwalSatuan));
+    row.find('.laba-racikan-display').val(formatRupiah(labaSatuan));
+
+    // ✅ yang berubah cuma subtotal
+    row.find('.subtotal-racikan').val(subtotalHargaAwal);         // subtotal_br (total)
+    row.find('.subtotal-racikanl').val(subtotalHargaJual);        // subtotal_brl (total)
+    row.find('.subtotallaba-racikan').val(subtotalLaba);          // subtotal_laba_br (total)
+    row.find('.harga-jracikan').val(hargaJualSatuan);             // kalau ini UNIT jual (lebih konsisten)
+
+    row.find('.subtotal-racikanl-display').val(formatRupiah(subtotalHargaJual));
+
+    hitungTotalRacikan(racikanId);
+    hitungTotal();
+}
+
+
+    function hitungTotalRacikan(racikanId) {
+        let subtotalR = 0;
+        let subtotalLabaR = 0;
+        let subtotalHargaJualR = 0;
+
+        $(`#racikan-obat-${racikanId} tr`).each(function () {
+            const subtotal = parseFloat($(this).find('.subtotal-racikan').val()) || 0;
+            const subtotalLaba = parseFloat($(this).find('.subtotallaba-racikan').val()) || 0;
+            const subtotalHargaJual = parseFloat($(this).find('.subtotal-racikanl').val()) || 0;
+
+            subtotalR += subtotal;
+            subtotalLabaR += subtotalLaba;
+            subtotalHargaJualR += subtotalHargaJual;
+        });
+
+        // Ambil jumlah racikan (berapa kali racikan ini dibuat)
+        const jumlahRacikan = parseFloat($(`input[name="racikan[${racikanId}][jumlah_r]"]`).val()) || 1;
+
+        console.log('Total per racikan:', {
+            subtotalR: subtotalR,
+            subtotalLabaR: subtotalLabaR,
+            subtotalHargaJualR: subtotalHargaJualR,
+            jumlahRacikan: jumlahRacikan
+        });
+
+        // Juga update grand total
         hitungTotal();
     }
 </script>
@@ -1587,7 +1641,7 @@
             <div class="page-title-box">
                 <div class="float-end">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="<?php echo base_url(); ?>poli/kecantikan">
+                        <li class="breadcrumb-item"><a href="<?php echo base_url(); ?>poli/umum">
                                 <?php echo $title; ?>
                             </a></li>
                         <li class="breadcrumb-item active">Proses</li>
@@ -1640,6 +1694,7 @@
                                                         id="kode_invoice" placeholder="Kode invoice"
                                                         value="<?php echo $row['kode_invoice'] ?>" readonly
                                                         autocomplete="off">
+                                                    <!-- ambil dari rsp_registrasi -->
                                                 </div>
                                             </div>
                                             <div class="mb-3 row">
@@ -1650,14 +1705,16 @@
                                                         id="nama_dokter" placeholder="Nama dokter"
                                                         value="<?php echo $row['nama_dokter'] ?>" readonly
                                                         autocomplete="off">
+                                                    <!-- ambil dari rsp_registrasi -->
                                                 </div>
                                             </div>
+                                            <!-- semua ini ambil data dari rsp_registrasi -->
                                             <div class="mb-3 row">
                                                 <label for="tambah_contoh" class="col-sm-4 col-form-label">Nama
                                                     Pasien</label>
                                                 <div class="col-sm-8">
                                                     <input type="hidden" class="form-control" name="id" id="id"
-                                                        placeholder="Id" value="<?php echo $row['id'] ?>" readonly
+                                                        placeholder="Id" value="<?php echo $id['id'] ?>" readonly
                                                         autocomplete="off">
                                                     <input type="hidden" class="form-control" name="id_poli"
                                                         id="id_poli" placeholder="Id_poli"
@@ -1687,7 +1744,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <!-- untuk tab nya ini  -->
+                                            <!-- untuk tab nya ini ambil data dari mst_pasien -->
                                             <div class="mb-3 row">
                                                 <label for="tambah_contoh" class="col-sm-4 col-form-label">NIK</label>
                                                 <div class="col-sm-8">
@@ -1734,89 +1791,43 @@
                                             <label for="tambah_contoh" class="col-sm-2 col-form-label">Keluhan</label>
                                             <div class="col-sm-10">
                                                 <textarea class="form-control" name="keluhan" id="keluhan" required
-                                                    placeholder="Berikan keluhan yang dimiliki"><?php echo $row['keluhan'] ?></textarea>
+                                                    placeholder="Berikan keluhan yang dimiliki"><?= $row['keluhan'] ?></textarea>
                                             </div>
                                         </div>
                                         <div class="mb-3 row">
-                                            <label for="tambah_contoh" class="col-sm-2 col-form-label">Jenis
-                                                treatment</label>
+                                            <label for="tambah_contoh" class="col-sm-2 col-form-label">Tekanan
+                                                Darah</label>
                                             <div class="col-sm-10">
-                                                <input type="text" class="form-control" name="jenis_treatment"
-                                                    id="jenis_treatment" placeholder="Jenis treatment" required
-                                                    autocomplete="off" value="<?php echo $row['jenis_treatment'] ?>">
+                                                <input type="text" class="form-control" name="tekanan_darah"
+                                                    id="tekanan_darah" placeholder="Tekanan Darah" required
+                                                    autocomplete="off" value="<?= $row['tekanan_darah'] ?>">
                                             </div>
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
-                                        <label for="tambah_contoh" class="col-sm-2 col-form-label">Riwayat
-                                            Alergi</label>
+                                        <label for="tambah_contoh" class="col-sm-2 col-form-label">Suhu</label>
                                         <div class="col-sm-10">
-                                            <input type="text" class="form-control" name="r_alergi" id="r_alergi"
-                                                placeholder="Riwayat alergi"
-                                                value="<?php echo $row['riwayat_alergi'] ?>" autocomplete="off">
+                                            <input type="text" class="form-control" name="suhu" id="suhu"
+                                                placeholder="Suhu" autocomplete="off" required autocomplete="off"
+                                                value="<?= $row['suhu'] ?>">
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
-                                        <label for="tambah_contoh" class="col-sm-2 col-form-label">Produk
-                                            Digunakan</label>
+                                        <label for="tambah_contoh" class="col-sm-2 col-form-label">Nadi</label>
                                         <div class="col-sm-10">
-                                            <input type="text" class="form-control" name="produk_digunakan"
-                                                id="produk_digunakan" placeholder="Produk digunakan" autocomplete="off"
-                                                value="<?php echo $row['produk_digunakan'] ?>">
+                                            <input type="text" class="form-control" name="nadi" id="nadi"
+                                                placeholder="Detak Nadi" required autocomplete="off"
+                                                value="<?= $row['nadi'] ?>">
                                         </div>
                                     </div>
                                     <div class="mb-3 row">
-                                        <label for="tambah_contoh" class="col-sm-2 col-form-label">Hasil
-                                            Perawatan</label>
+                                        <label for="tambah_contoh" class="col-sm-2 col-form-label">Catatan</label>
                                         <div class="col-sm-10">
-                                            <input type="text" class="form-control" name="hasil_perawatan"
-                                                id="hasil_perawatan" placeholder="Hasil perawatan" required
-                                                autocomplete="off" value="<?php echo $row['hasil_perawatan'] ?>">
+                                            <textarea class="form-control" name="catatan" id="catatan" required
+                                                placeholder="Tulis Catatan"><?= $row['catatan'] ?></textarea>
                                         </div>
                                     </div>
-                                    <div class="mb-3 row">
-                                        <label for="tambah_contoh" class="col-sm-2 col-form-label">Status Foto</label>
-                                        <div class="col-sm-10">
-                                            <select name="status_foto" id="status_foto" class="form-select" required>
-                                                <option value="">Pilih Status Foto</option>
-                                                <?php
-                                                if (!empty($row)) { ?>
-                                                    <option value="Sebelum" <?= $row['status_foto'] == 'Sebelum' ? 'selected' : '' ?>>
-                                                        Sebelum
-                                                    </option>
-                                                    <option value="Sesudah" <?= $row['status_foto'] == 'Sesudah' ? 'selected' : '' ?>>
-                                                        Sesudah
-                                                    </option>
-                                                <?php } ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3 row">
-                                        <label class="col-sm-2 col-form-label">Upload Foto</label>
-                                        <div class="col-sm-10">
-                                            <div class="row">
-                                                <?php if (!empty($row['foto'])) { ?>
-                                                    <div class="col-md-6">
-                                                        <input type="file" class="dropify_lama" data-height="250"
-                                                            name="foto_lama" id="dropify_lama" data-max-file-size="2M"
-                                                            data-show-remove="false"
-                                                            data-allowed-file-extensions="jpg png jpeg" disabled />
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <input type="file" class="dropify" data-height="250"
-                                                            name="upload_foto" id="upload_foto" data-max-file-size="2M"
-                                                            data-allowed-file-extensions="jpg png jpeg" />
-                                                    </div>
-                                                <?php } else { ?>
-                                                    <div class="col-md-6">
-                                                        <input type="file" class="dropify" data-height="250"
-                                                            name="upload_foto" id="upload_foto" data-max-file-size="2M"
-                                                            data-allowed-file-extensions="jpg png jpeg" required />
-                                                    </div>
-                                                <?php } ?>
-                                            </div>
-                                        </div>
-                                    </div>
+
                                     <!-- detail end -->
                                     <hr>
                                     <!-- diagnosa start -->
@@ -1840,19 +1851,26 @@
                                                 <th width="5%">Aksi</th>
                                             </tr>
                                         </thead>
+                                        <!-- <tbody>
+                                        </tbody> -->
                                         <tbody>
                                             <?php if (!empty($diagnosa_terisi)): ?>
                                                 <?php foreach ($diagnosa_terisi as $d): ?>
-                                                    <tr>
+                                                    <tr data-diagnosa-id="<?= (int) $d['id_diagnosa'] ?>" data-type="modal">
                                                         <td>
-                                                            <input type="hidden" name="id_diagnosa[]" class="form-control"
-                                                                value="<?= $d['id_diagnosa'] ?>" readonly>
-                                                            <input type="text" name="diagnosa[]" class="form-control"
-                                                                value="<?= $d['nama_diagnosa'] ?>" readonly>
+                                                            <input type="hidden" name="diagnosa_modal[id_diagnosa][]"
+                                                                class="form-control" value="<?= (int) $d['id_diagnosa'] ?>"
+                                                                readonly>
+                                                            <input type="text" name="diagnosa_modal[nama][]"
+                                                                class="form-control"
+                                                                value="<?= htmlspecialchars($d['nama_diagnosa'] ?? '', ENT_QUOTES) ?>"
+                                                                readonly>
                                                         </td>
                                                         <td>
-                                                            <button type="button" class="btn btn-sm btn-danger"
-                                                                onclick="$(this).closest('tr').remove()"><i class="far fa-trash-alt"></i></button>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-danger btn-hapus-diagnosa">
+                                                                <i class="far fa-trash-alt"></i>
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -1887,24 +1905,32 @@
                                                 <th width="5%">Aksi</th>
                                             </tr>
                                         </thead>
+                                        <!-- <tbody>
+                                        </tbody> -->
                                         <tbody>
                                             <?php if (!empty($tindakan_terisi)): ?>
                                                 <?php foreach ($tindakan_terisi as $t): ?>
-                                                    <tr>
+                                                    <tr data-tindakan-id="<?= (int) $t['id_tindakan'] ?>" data-type="modal">
                                                         <td>
-                                                            <input type="hidden" name="id_tindakan[]" class="form-control"
-                                                                value="<?= $t['id_tindakan'] ?>" readonly>
-                                                            <input type="text" name="tindakan[]" class="form-control"
-                                                                value="<?= $t['nama'] ?>" readonly>
-                                                        </td>
-                                                        <td>
-                                                            <input type="text" name="harga_tindakan[]" class="form-control"
-                                                                value="<?php echo 'Rp ' . number_format($t['harga'], 0, '.', ',') ?? 0 ?>"
+                                                            <input type="hidden" name="tindakan_modal[id_tindakan][]"
+                                                                class="form-control" value="<?= (int) $t['id_tindakan'] ?>"
+                                                                readonly>
+                                                            <input type="text" name="tindakan_modal[nama][]"
+                                                                class="form-control"
+                                                                value="<?= htmlspecialchars($t['nama'] ?? '', ENT_QUOTES) ?>"
                                                                 readonly>
                                                         </td>
                                                         <td>
-                                                            <button type="button" class="btn btn-sm btn-danger"
-                                                                onclick="$(this).closest('tr').remove(); hitungTotalTindakan()"><i class="far fa-trash-alt"></i></button>
+                                                            <input type="text" name="tindakan_modal[harga][]"
+                                                                class="form-control input_htindakan"
+                                                                value="<?= htmlspecialchars($t['harga'] ?? '', ENT_QUOTES) ?>"
+                                                                readonly>
+                                                        </td>
+                                                        <td>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-danger btn-hapus-tindakan">
+                                                                <i class="far fa-trash-alt"></i>
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -1919,7 +1945,7 @@
                                     <div class="tab-pane p-3" id="tab-obat" role="tabpanel">
                                         <h5 class="my-3">Resep Obat</h5>
                                         <button class="btn btn-primary mb-3" type="button" data-bs-toggle="modal"
-                                            data-bs-target="#modalObat">
+                                            data-bs-target="#modalObat" onclick="resetModalObat()">
                                             <i class="fas fa-search me-2"></i>Cari Obat</button>
                                         <div class="table-responsive">
                                             <table class="table table-md table-bordered" id="table_resep">
@@ -1935,9 +1961,9 @@
                                                         <th class="text-center" width="5%">Aksi</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody>
+                                                 <tbody>
                                                     <?php $no = 0; ?>
-                                                    <?php if (!empty($obat_terisi)): ?>
+                                                    <?php if (!empty($obat_terisi)):?>
                                                         <?php foreach ($obat_terisi as $o):
                                                             $no++; ?>
                                                             <tr id="resep-row-<?= $no ?>">
@@ -2022,7 +2048,6 @@
                                                         <?php endforeach; ?>
                                                     <?php endif; ?>
                                                 </tbody>
-
                                             </table>
                                         </div>
                                         <hr class="mt-4">
@@ -2031,12 +2056,12 @@
                                             <i class="fas fa-plus me-2"></i>Tambah Racikan
                                         </button>
                                         <!-- <div id="racikan_container"></div> -->
-                                        <div id="racikan_container">
+                                         <div id="racikan_container">
                                             <?php $rc = 0;
                                             $maxRc = 0; ?>
-
                                             <?php if (!empty($racikan_terisi)):?>
-                                                <?php foreach ($racikan_terisi as $r):$rc++; $maxRc = $rc;?>
+                                                <?php foreach ($racikan_terisi as $r):
+                                                    $rc++; $maxRc = $rc;?>
                                                     <div class="racikan-card card border mb-3" id="racikan-<?= $rc ?>">
                                                         <div class="card-body">
 
@@ -2101,7 +2126,7 @@
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody id="racikan-obat-<?= $rc ?>">
-                                                                        <?php $ob = 0;?>
+                                                                        <?php $ob = 0; ?>
                                                                         <?php foreach (($r['obat'] ?? []) as $d):
                                                                             $ob++; ?>
                                                                             <tr id="racikan-obat-row-<?= $rc ?>-<?= $ob ?>">
@@ -2204,13 +2229,11 @@
                                                                     </tbody>
                                                                 </table>
                                                             </div>
-
                                                         </div>
                                                     </div>
                                                 <?php endforeach; ?>
                                             <?php endif; ?>
                                         </div>
-
                                         <hr class="mt-4 row">
                                     </div>
                                 </div>
@@ -2234,7 +2257,7 @@
                                     <div class="col-md-4">
                                         <h5 class="text-end">Total Biaya Semua:
                                             <!-- <input type="hidden" name="subtotal_all_obat[]" id="utotal_obat" readonly>
-                                    <span id="total_obat" class="text-success">Rp 0</span> -->
+                                        <span id="total_obat" class="text-success">Rp 0</span> -->
                                             <input type="hidden" name="subtotal_all_to[]" id="tobat" readonly>
                                             <span id="tobat1" class="text-success">Rp 0</span>
                                         </h5>
@@ -2244,6 +2267,7 @@
                     </form>
                     <div class="row">
                         <div class="col-sm-10 ">
+                            <input type="hidden" name="kode_invoice" value="<?= $row['kode_invoice'] ?>">
                             <button type="button" onclick="tambah(event);" class="btn btn-success"><i
                                     class="fas fa-save me-2"></i>Simpan</button>
                         </div>
@@ -2267,7 +2291,7 @@
                     aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <input type="text" class="form-control" name="nama_tindakan" id="nama_tindakanc"
+                <input type="text" class="form-control" name="nama_tindakan" id="nama_tindakan"
                     oninput="cariTindakan(this.value)" placeholder="Cari Tindakan" autocomplete="off">
                 <div class="table-responsive">
                     <table class="table mb-0 table-hover" id="table-data">
@@ -2385,6 +2409,8 @@
                             <tr>
                                 <th>No</th>
                                 <th>Nama Obat</th>
+                                <th>Satuan</th>
+                                <th>Harga</th>
                             </tr>
                         </thead>
                         <tbody id="obatList"></tbody>
@@ -2413,8 +2439,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="far fa-window-close"></i> Tutup
-                </button>
+                    <i class="far fa-window-close"></i> Tutup</button>
             </div>
         </div>
     </div>
@@ -2423,3 +2448,4 @@
 <script>
     racikanCounter = <?= (int) $maxRc ?>;
 </script>
+

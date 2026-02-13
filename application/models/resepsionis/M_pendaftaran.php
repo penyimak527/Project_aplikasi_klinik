@@ -337,7 +337,7 @@ public function result_data(){
         $this->db->select('*');
         $this->db->from('mst_poli');
         return $this->db->get()->result();
-        ['status' => false, 'msg' => 'data kategori ada'];
+        // ['status' => false, 'msg' => 'data kategori ada'];
     }
 
     public function dokter()
