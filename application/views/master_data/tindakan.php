@@ -28,11 +28,12 @@
 
   function get_data() {
     let cari = $('#cari').val();
+    let opsi = $('#pl_poli').val();
     let count_header = $(`#table-data thead tr th`).length
 
     $.ajax({
       url: '<?php echo base_url(); ?>master_data/tindakan/result_data',
-      data: { cari },
+      data: { cari: cari, poli: opsi, },
       type: "POST",
       dataType: "json",
       beforeSend: () => {
@@ -215,6 +216,14 @@
                 <div class="input-group-text"><i class="fas fa-search"></i></div>
                 <input type="text" class="form-control" id="cari" placeholder="Cari Tindakan/Nama Poli" autocomplete="off">
               </div>
+            </div>
+            <div class="col-md-3">
+              <select name="pl_poli" id="pl_poli" class="form-control" onchange="get_data()">
+                <option value="">Semua Poli</option>
+                <?php if ($poli): foreach ($poli as  $pl) {?>
+                 <option value="<?= $pl['id']?>"><?= $pl['nama']?></option> 
+                  <?php } endif;?>
+              </select>
             </div>
           </div>
           <div class="table-responsive">

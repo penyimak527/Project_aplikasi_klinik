@@ -752,16 +752,24 @@
             }
         });
     }
+function getNextResepRowId() {
+  let max = 0;
+  $('#table_resep tbody tr[id^="resep-row-"]').each(function () {
+    const n = parseInt(this.id.replace('resep-row-', ''), 10);
+    if (!isNaN(n) && n > max) max = n;
+  });
+  return max + 1;
+}
 
     // Function baru: Buat row dengan dropdown satuan
     function tambah_obat_rsp(item) {
         event.preventDefault();
 
         // Hitung nomor urut
-        const rowCount = $('#table_resep tbody tr').length;
-        const newRowId = rowCount + 1;
+        // const rowCount = $('#table_resep tbody tr').length;
+        // const newRowId = rowCount + 1;
+        const newRowId = getNextResepRowId();
 
-        // BUAT DROPDOWN MANUAL DULU, KEMUDIAN LOAD DATA REAL
         buatRowDenganDropdownManual(item, newRowId);
     }
 
@@ -1343,9 +1351,20 @@
     //                        class="form-control" placeholder="Aturan Pakai" required>
     // <input type="text" name="racikan[${racikanCounter}][keterangan_r]" 
     //                        class="form-control" placeholder="Keterangan">
+    function getNextRacikanRowId(racikanId){
+  let max = 0;
+  $(`#racikan-obat-${racikanId} tr[id^="racikan-obat-row-${racikanId}-"]`).each(function(){
+    const n = parseInt(this.id.replace(`racikan-obat-row-${racikanId}-`, ''), 10);
+    if (!isNaN(n) && n > max) max = n;
+  });
+  return max + 1;
+}
+
     function buatRowRacikanDenganDropdown(satuanList, baseItem, racikanId) {
         const rowCount = $(`#racikan-obat-${racikanId} tr`).length;
-        const newRowId = rowCount + 1;
+        // const newRowId = rowCount + 1;
+        const newRowId = getNextRacikanRowId(racikanId);
+
 
         // CARI SATUAN AKTIF - SAMA SEPERTI OBAT BIASA
         var activeSatuan = satuanList.find(satuan =>

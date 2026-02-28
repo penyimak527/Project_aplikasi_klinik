@@ -13,6 +13,8 @@ class M_transaksi extends CI_Model
         $pol_kecantikan = $this->db->get_where('pol_kecantikan', ['kode_invoice' => $kode_invoice])->row_array();
         $pol_gigi = $this->db->get_where('pol_gigi', ['kode_invoice' => $kode_invoice])->row_array();
         $pol_umum = $this->db->get_where('pol_umum', ['kode_invoice' => $kode_invoice])->row_array();
+        $pol_anak = $this->db->get_where('pol_anak', ['kode_invoice' => $kode_invoice])->row_array();
+        
         $data['tindakan'] = [];
         if ($pol_kecantikan) {
             $data['tindakan'] = $this->db->get_where('pol_kecantikan_tindakan', ['id_pol_kecantikan' => $pol_kecantikan['id']])->result_array();
@@ -22,6 +24,9 @@ class M_transaksi extends CI_Model
         }
         if ($pol_umum) {
             $data['tindakan'] = $this->db->get_where('pol_umum_tindakan', ['id_pol_umum' => $pol_umum['id']])->result_array();
+        }
+        if ($pol_anak) {
+            $data['tindakan'] = $this->db->get_where('pol_anak_tindakan', ['id_pol_anak' => $pol_anak['id']])->result_array();
         }
 
         $pol_resep = $this->db->get_where('pol_resep', ['kode_invoice' => $kode_invoice])->row_array();

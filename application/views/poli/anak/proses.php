@@ -115,7 +115,7 @@
 
     function searchDiagnosa(cari) {
         $.ajax({
-            url: '<?php echo base_url("poli/gigi/search_diagnosa"); ?>',
+            url: '<?php echo base_url("poli/anak/search_diagnosa"); ?>',
             type: 'POST',
             data: {
                 cari: cari
@@ -138,7 +138,7 @@
 
     function searchTindakan(cari) {
         $.ajax({
-            url: '<?php echo base_url("poli/gigi/search_tindakan"); ?>',
+            url: '<?php echo base_url("poli/anak/search_tindakan"); ?>',
             type: 'POST',
             data: {
                 cari: cari
@@ -216,7 +216,7 @@
             return;
         }
         $.ajax({
-            url: '<?php echo base_url("poli/gigi/tambah_diagnosa_ajax"); ?>',
+            url: '<?php echo base_url("poli/anak/tambah_diagnosa_ajax"); ?>',
             type: 'POST',
             data: {
                 nama_diagnosa: nama_diagnosa
@@ -241,7 +241,7 @@
             return;
         }
         $.ajax({
-            url: '<?php echo base_url("poli/gigi/tambah_tindakan_ajax"); ?>',
+            url: '<?php echo base_url("poli/anak/tambah_tindakan_ajax"); ?>',
             type: 'POST',
             data: {
                 nama_tindakan: nama_tindakan,
@@ -262,7 +262,7 @@
 
     function searchObat(cari = '') {
         $.ajax({
-            url: '<?php echo base_url("poli/gigi/search_obat"); ?>',
+            url: '<?php echo base_url("poli/anak/search_obat"); ?>',
             type: 'POST',
             data: {
                 cari: cari
@@ -323,7 +323,7 @@
                 harga_awal: item.harga_awal,
                 laba: item.laba,
                 harga_jual: item.harga_jual || (parseFloat(item.harga_awal) + parseFloat(item.laba)),
-                aturan_pakai: item.aturan_pakai
+                aturan_pakai: item.aturan_pakai,
             });
         }
 
@@ -369,7 +369,7 @@
             <input type="text" name="resep_obat[${obatCount}][jumlah]" class="form-control input-jumlah" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" value="${jumlah}" min="1">
         </td>
         <td>
-            <input type="text" name="resep_obat[${obatCount}][aturan_pakai]" class="form-control" placeholder="Contoh: 3x1 sehari" value="${item.aturan_pakai ?? ''}" autocomplete="off" required>
+            <input type="text" name="resep_obat[${obatCount}][aturan_pakai]" class="form-control" placeholder="Contoh: 3x1 sehari" autocomplete="off" value="${item.aturan_pakai ?? ''}" required>
         </td>
         <td>
             <input type="text" name="resep_obat[${obatCount}][harga]" class="form-control input-harga" value="${formatRupiah(item.harga_awal, 'Rp')}" readonly>
@@ -634,9 +634,9 @@
                 nama_barang: obat.nama_barang,
                 satuan_barang: obat.satuan_barang,
                 urutan_satuan: obat.urutan_satuan,
+                aturan_pakai: obat.aturan_pakai,
                 harga_awal: obat.harga,
-                laba: obat.laba,
-                aturan_pakai: obat.aturan_pakai
+                laba: obat.laba
             }, obat.jumlah);
         });
         racikanData.forEach(racikan => {
@@ -653,7 +653,7 @@
         }
         btn.prop('disabled', true).text('Memproses...');
         $.ajax({
-            url: '<?php echo base_url('poli/gigi/proses_aksi') ?>',
+            url: '<?php echo base_url('poli/anak/proses_aksi') ?>',
             method: 'POST',
             data: $('#form_proses').serialize(),
             dataType: 'json',
@@ -700,7 +700,7 @@
                 <div class="float-end">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <a href="<?php echo base_url('poli/gigi'); ?>">Poli Gigi</a>
+                            <a href="<?php echo base_url('poli/anak'); ?>">Poli Anak</a>
                         </li>
                         <li class="breadcrumb-item active">Proses</li>
                     </ol>
@@ -712,10 +712,10 @@
         </div>
     </div>
     <form id="form_proses">
-        <input type="hidden" name="id_pol_gigi" value="<?php echo $data['rekam_medis']['id_pol_gigi']; ?>">
+        <input type="hidden" name="id_pol_anak" value="<?php echo $data['rekam_medis']['id_pol_anak']; ?>">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title">Proses Poli Gigi</h4>
+                <h4 class="card-title">Proses Poli Anak</h4>
             </div>
             <div class="card-body">
                 <ul class="nav nav-pills nav-justified" role="tablist">
@@ -790,13 +790,44 @@
                         <div class="mb-3 row">
                             <label class="col-sm-2 col-form-label">Keluhan</label>
                             <div class="col-sm-10">
-                                <textarea class="form-control" name="keluhan" required><?php echo $data['rekam_medis']['keluhan']; ?></textarea>
+                                <textarea class="form-control" name="keluhan" required placeholder="Berikan keluhan yang dimiliki"><?php echo $data['rekam_medis']['keluhan']; ?></textarea>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-2 col-form-label">Berat Badan</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" placeholder="Berat Badan" name="berat_badan" required value="<?php echo $data['rekam_medis']['berat_badan']; ?>">
+                                <!-- <textarea class="form-control" name="berat_bdan" required><php echo $data['rekam_medis']['berat_badan']; ?></textarea> -->
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-2 col-form-label">Tinggi Badan</label>
+                            <div class="col-sm-10">
+                                <input type="text" placeholder="Tinggi Badan" class="form-control" name="tinggi_badan" required value="<?php echo $data['rekam_medis']['tinggi_badan']; ?>">
+                                <!-- <textarea class="form-control" name="catatan" required><php echo $data['rekam_medis']['berat_badan']; ?></textarea> -->
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-2 col-form-label">Suhu</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" name="suhu" placeholder="Suhu" required value="<?php echo $data['rekam_medis']['suhu']; ?>">
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-2 col-form-label">Status Imunisasi</label>
+                            <div class="col-sm-10">
+                                <!-- <input type="text" class="form-control" name="status_imunisasi" required value="<?php echo $data['rekam_medis']['suhu']; ?>"> -->
+                                 <select name="status_imunisasi" class="form-select">
+                                    <option value="">Pilih Status</option>
+                                    <option value="Sudah">Sudah</option>
+                                    <option value="Belum">Belum</option>
+                                 </select>
                             </div>
                         </div>
                         <div class="mb-3 row">
                             <label class="col-sm-2 col-form-label">Catatan</label>
                             <div class="col-sm-10">
-                                <textarea class="form-control" name="catatan" required><?php echo $data['rekam_medis']['catatan']; ?></textarea>
+                                <textarea class="form-control" name="catatan" placeholder="Tulis Catatan" required><?php echo $data['rekam_medis']['catatan']; ?></textarea>
                             </div>
                         </div>
                         <hr class="mt-4">

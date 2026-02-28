@@ -24,7 +24,9 @@ class Welcome extends CI_Controller
 			redirect('antrian/antrian/index_dokter');
 		}elseif ($level == 'Dokter Gigi') {
 			redirect('antrian/antrian/index_dokter');
-		} elseif ($level == 'Dokter Umum') {
+		}elseif ($level == 'Dokter Umum') {
+			redirect('antrian/antrian/index_dokter');
+		}elseif ($level == 'Dokter Anak') {
 			redirect('antrian/antrian/index_dokter');
 		}elseif ($level == 'Resepsionis') {
 			redirect('resepsionis/pendaftaran');

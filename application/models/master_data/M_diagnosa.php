@@ -4,6 +4,7 @@ class M_diagnosa extends CI_Model
 
     public function result_data() {
         $cari = $this->input->post('cari');
+        $poli = $this->input->post('poli');
         $sql = "SELECT a.* FROM mst_diagnosa a WHERE 1=1";
         // $sql = "SELECT a.*, b.nama AS nama_poli FROM mst_diagnosa a LEFT JOIN mst_poli b ON a.id_poli = b.id WHERE 1=1";
         $params = [];
@@ -12,6 +13,10 @@ class M_diagnosa extends CI_Model
             $sql .= " AND (a.nama_diagnosa LIKE ? OR a.nama_poli LIKE ?)";
             $params[] = "%$cari%";
             $params[] = "%$cari%";
+        }
+        if($poli != ''){
+            $sql .= " AND (a.id_poli = ?)";
+            $params[] = $poli;
         }
 
         $sql .= " ORDER BY a.id DESC";

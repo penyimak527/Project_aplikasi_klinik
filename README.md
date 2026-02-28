@@ -95,12 +95,12 @@ Untuk menjalankan aplikasi ini, pastikan Anda memiliki:
 2. **Clone atau Salin Repository**:  
    - Clone repository ini atau salin isi folder ke dalam direktori CodeIgniter yang sudah diekstrak.  
      ```
-     git clone <URL_REPOSITORY_ANDA>
+     git clone https://github.com/penyimak527/Project_aplikasi_klinik.git
      ```
 
 3. **Konfigurasi Database**:  
    - Buat database baru di MySQL/MariaDB.  
-   - Impor skema database dari file `database.sql` (jika ada) ke database Anda.  
+   - Impor skema database dari file `aplikasi_klinik.sql` (jika ada) ke database Anda(tambahkan beberapa tabel jika kurang).  
    - Buka file `application/config/database.php` dan sesuaikan pengaturan database:  
      ```
      'hostname' => 'localhost',

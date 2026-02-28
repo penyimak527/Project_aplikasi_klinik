@@ -5,6 +5,7 @@ class M_tindakan extends CI_Model
     public function result_dat($carig = null)
     {
         $cari = $this->input->post('cari');
+        $poli = $this->input->post('poli');
 
         // $this->db->join('mst_poli', 'mst_poli.id = mst_tindakan.id_poli' );
         $sql = "SELECT a.* FROM mst_tindakan a WHERE 1=1";
@@ -13,6 +14,10 @@ class M_tindakan extends CI_Model
             $sql .= " AND (a.nama LIKE ? OR a.nama_poli LIKE ?)";
             $params[] = "%$cari%";
             $params[] = "%$cari%";
+        }
+        if($poli != ''){
+            $sql .= " AND (a.id_poli = ?)";
+            $params[] = $poli;
         }
 
         $sql .= " ORDER BY a.id DESC";

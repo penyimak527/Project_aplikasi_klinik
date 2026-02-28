@@ -805,8 +805,14 @@
         selectedDiagnosaManual.add(namaLower);
     }
 
-
-
+function getNextResepRowId() {
+  let max = 0;
+  $('#table_resep tbody tr[id^="resep-row-"]').each(function () {
+    const n = parseInt(this.id.replace('resep-row-', ''), 10);
+    if (!isNaN(n) && n > max) max = n;
+  });
+  return max + 1;
+}
 
     // Update fungsi tambah_obat_rsp dengan dropdown satuan
     function tambah_obat_rsp(item, satuanData) {
@@ -814,8 +820,8 @@
 
         // Hitung nomor urut
         const rowCount = $('#table_resep tbody tr').length;
-        const newRowId = rowCount + 1;
-
+        // const newRowId = rowCount + 1;
+const newRowId = getNextResepRowId();
         // Cari satuan default (BOX) dari satuanData
         const defaultSatuan = satuanData.find(s => s.id_satuan_barang == 1) || satuanData[0];
 
@@ -2068,7 +2074,7 @@
 
                                                                 <td class="text-center">
                                                                     <button type="button" class="btn btn-sm btn-danger"
-                                                                        onclick="$('#resep-row-<?= $no ?>').remove(); hitungTotal()">
+                                                                        onclick="hapusObat('<?= $o['id_barang']?>', '<?= $no ?>')">
                                                                         <i class="far fa-trash-alt"></i>
                                                                     </button>
                                                                 </td>
@@ -2249,7 +2255,7 @@
                                                                                 <td class="text-center">
                                                                                     <button type="button"
                                                                                         class="btn btn-sm btn-danger"
-                                                                                        onclick="$('#racikan-obat-row-<?= $rc ?>-<?= $ob ?>').remove(); hitungTotal(); hitungTotalRacikan()">
+                                                                                        onclick="hapusObatRacikan('<?= $d['id_barang']?>', '<?= $rc?>', '<?= $ob?>')">
                                                                                         <i class="far fa-trash-alt"></i>
                                                                                     </button>
                                                                                 </td>

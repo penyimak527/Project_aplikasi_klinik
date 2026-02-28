@@ -7,9 +7,9 @@ $nama_level = $ci->session->userdata('nama_level');
 ?>
 <script>
   $(document).ready(function () {
-    setInterval(() => {
-      get_data();
-    }, 5000);
+    // setInterval(() => {
+    //   get_data();
+    // }, 5000);
     $("#jumlah_tampil_antrian").change(function () {
       get_data();
     });
@@ -26,8 +26,9 @@ $nama_level = $ci->session->userdata('nama_level');
     });
     select();
     $(document).on('change', '#poli-select', function () {
-      get_data(); 
+      get_data();
     });
+    get_data();
   });
   function get_data() {
     let cari = $("#cari").val();
@@ -193,7 +194,7 @@ $nama_level = $ci->session->userdata('nama_level');
       });
   }
   function cekButton(kode_invoice) {
-      let id_poli = $('#poli-select').val();
+    let id_poli = $('#poli-select').val();
     $.ajax({
       url: "<?= base_url('antrian/antrian/cek_btn') ?>",
       type: "POST",
@@ -257,7 +258,7 @@ $nama_level = $ci->session->userdata('nama_level');
       url: "<?= base_url() ?>antrian/antrian/cek_konfirmasi",
       data: {
         kode_invoice: kode_invoice,  // Perbaiki format data
-        id_poli : id_poli,
+        id_poli: id_poli,
       },
       dataType: "JSON",
       beforeSend: function () {
@@ -287,16 +288,20 @@ $nama_level = $ci->session->userdata('nama_level');
           }).then((result) => {
             if (result.isConfirmed) {
               let id_polidata = data.id_poli_datas;
-                if (id_poli == 16) {
+              console.log(id_polidata);
+              if (id_poli == 16) {
                 window.location.href =
                   "<?php echo base_url() ?>poli/kecantikan/tampilan_proses/" +
                   kode_invoice;
               } else if (id_poli == 15) {
                 window.location.href =
                   `<?php echo base_url('poli/gigi/view_proses/'); ?>${id_polidata}`;
-              }else if (id_poli == 14) {
+              } else if (id_poli == 14) {
                 window.location.href =
                   `<?php echo base_url('poli/umum/view_proses/'); ?>${kode_invoice}`;
+              } else if (id_poli == 27) {
+                window.location.href =
+                  `<?php echo base_url('poli/anak/view_proses/'); ?>${id_polidata}`;
               }
               else {
                 get_data();
@@ -450,6 +455,9 @@ $nama_level = $ci->session->userdata('nama_level');
               } else if (id_poli == 14) {
                 window.location.href =
                   `<?php echo base_url('poli/umum/view_proses/'); ?>${kode_invoice}`;
+              } else if (id_poli == 27) {
+                window.location.href =
+                  `<?php echo base_url('poli/anak/proses/'); ?>${kode_invoice}`;
               }
               else {
                 get_data();
@@ -538,7 +546,7 @@ $nama_level = $ci->session->userdata('nama_level');
           if (data.poli.status_poli == 'Dokter ada!') {
             const item = data.poli.kirim;
             $('#poli-select').html(`<option value="${item.id}">${item.nama}</option>`);
-                get_data();
+            get_data();
           } else {
             $('#poli-select').empty().append('<option value="-">-- Pilih Poli --</option>');
             data.poli.kirim.forEach(item => {
@@ -549,7 +557,7 @@ $nama_level = $ci->session->userdata('nama_level');
                 'data-id': item.id
               }))
             });
-                get_data();
+            get_data();
           }
         }
       },

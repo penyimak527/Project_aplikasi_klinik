@@ -15,6 +15,7 @@ class Tindakan extends CI_Controller
     {
         $data['active'] = 'Master data';
         $data['title'] = 'Tindakan';
+        $data['poli'] = $this->db->get_where('mst_poli')->result_array();
         $this->load->view('templates/header', $data);
         $this->load->view('master_data/tindakan', $data);
         $this->load->view('templates/footer');

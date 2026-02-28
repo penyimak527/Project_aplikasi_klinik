@@ -191,7 +191,7 @@
             <div class="col-sm-3">
               <div class="input-group">
                 <div class="input-group-text"><i class="fas fa-search"></i></div>
-                <input type="text" class="form-control" id="cari" placeholder="Cari Level" autocomplete="off">
+                <input type="text" class="form-control" id="cari" placeholder="Cari Nama/Username/Level" autocomplete="off">
               </div>
             </div>
           </div>
